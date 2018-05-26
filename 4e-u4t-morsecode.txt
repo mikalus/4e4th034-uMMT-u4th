@@ -1,0 +1,32 @@
+\ u4th morsecode example
+
+decimal
+
+variable (dit)    70 (dit) !
+
+: gap   \ --    short gap
+  initp2  
+  (dit) @ 0 do ontime offtime loop ;
+
+: dit   \ --    short tone;
+  initp2  
+  (dit) @ 0 do bit7h ontime bit7l offtime loop ;
+
+: dah   \ --    long tone
+  initp2
+  (dit) @ 3 * 0 do bit7h ontime bit7l offtime loop ;  
+
+: cgap  \ --    character gap   
+  3 0 do gap loop ;
+  
+: wgap  \ --    word gap
+  7 0 do gap loop ; 
+
+: SOS  ( -- )
+  dit gap dit gap dit cgap
+  dah gap dah gap dah cgap
+  dit gap dit gap dit wgap ;
+
+\ now enter:  SOS SOS SOS
+
+\ finis

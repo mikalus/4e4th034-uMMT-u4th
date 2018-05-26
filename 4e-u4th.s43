@@ -1,0 +1,170 @@
+; Build 4e4th+uMMT on MSP430G2553 MicroBox  
+; for Juergen Pintaske, 2016 jun 11. 
+
+; ------------------------------------------------------------------------------
+; 4e4th is a Forth based on CamelForth 
+; for the Texas Instruments MSP430 
+; 
+; This program is free software; you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation; either version 3 of the License, or
+; (at your option) any later version.
+; 
+; This program is distributed in the hope that it will be useful,
+; but WITHOUT ANY WARRANTY; without even the implied warranty of
+; MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+; GNU General Public License for more details.
+;
+; You should have received a copy of the GNU General Public License
+; along with this program.  If not, see <http://www.gnu.org/licenses/>.
+; 
+; See LICENSE TERMS in Brads file readme.txt as well.
+; ------------------------------------------------------------------------------
+; REVISION HISTORY
+; 28 Mai 2016
+;    Dokumentation überarbeitet für makeglossary.py ; mk
+; 17 November 2013
+;    Comments about making ISR in 4e4th
+; 05 June 2013  
+;    WORDS can stop and go now.
+;    LABEL to build ISR code.
+;    INTERRUPT to store ISR address in Interrupt vector. 
+;    VECSAVE VECRESTORE VECBACK added.
+; 11 Jan 2013 made comments, new features and words:
+;    Indicate BASE in ok promt.
+;    0U.R ( u n -- ) print u with n leading zeros.
+;    (VECWIPE) ( -- ) erase ISR flash.
+;    VECWIPE   ( -- ) do (VECWIPE) and set default reset vector.
+; cleaned up/added memory information words:
+;    RESETADR  ( -- adr)      reset vector address
+;    MEMBOT    ( -- adr)      bottom of USERflash         
+;    MEMTOP    ( -- adr)      top of USERflash         
+;    MEM       ( -- u)        unused bytes in flash
+;    UNUSED    ( -- u)        unused bytes in RAM
+;    VARBOT    ( -- adr)      bottom of variable area
+;    TOPSEG    ( -- adr)      bottom of top most flash segment
+;    VECBOT    ( -- adr)      bottom of interrupt vectors
+;    ?         ( adr -- u )   display content of variable          
+; 08 Dez 2012 merged brads PARSE etc form camelforth/340 V4.1
+;    which fixes the empty string bug.
+; Dez 2012   Added some features:
+;   Save variables to info-c and restore from there on COLD.
+;   Made upper most flash segment writable; you may write vectors now.
+;    VEC! (x adr  -- )     store x to adr in top most segment
+;    VEC! will write _any_ flash location.  !! dangerous!!
+;   VECWIPE will erase flash but not kernel, sets reset vector to boot 4e4th.
+;   Kernal is bigger now, user flash smaler; 
+;     see: XLINK configuration file for MSP430G2553 4e-lnk430G2553.xcl
+; 30 Mar 2012 mk fixed FM/MOD
+; 26 Feb 2012 mk - adopted to MSP430G2553
+;   MEM ( -- n ) n = bytes left in flash
+;   FLASHEND constant MEMTOP
+;   FLASHSTART constant MEMBOT
+;   kernel at $E000, IDP = FLASHSTART = C000
+;   fixed backspace.
+;   ok promt at end of line.
+;   .S prints depth.
+; ------------------------------------------------------------------------------
+
+
+#include "msp430.h"                     ; #define controlled include file
+#include "4e-CF430G2553forth.h"         ; header macros and register defs
+
+        EXTERN  UP,UAREA,PADAREA,LSTACK,PSTACK,RSTACK
+        EXTERN  TIBAREA,RAMDICT,ROMDICT
+        EXTERN  TIB_SIZE,UAREA_SIZE,VARAREA,VAR_SIZE,nullirq
+
+        RSEG    CODE                    ; place program in 'CODE' segment
+
+link    SET 0           ; initial dictionary link
+
+; ------------------------------------------------------------------------------
+; chip ident
+
+
+; production fuse 
+PROFUSE:  DW 0xFFFF  ; burn fuse to prohibit WIPE 
+
+/*******************************************************************************
+
+; 4e4th
+; version strings 
+version:  DB (verend-ver0)
+ver0:     DB ' MSP430G2553 LaunchPad - 4E4th ' 
+          EVEN 0x20 ; use blank as padding byte
+verend:
+
+stamp:    DB (stampend-stamp0)
+stamp0:   DB __date__,' ',__time__
+stampend:
+
+*******************************************************************************/
+
+; u4th
+; version strings 
+version:  DB (verend-ver0)
+ver0:     DB ' MicroBox u4th on MSP430G2553, build: ' 
+          EVEN 0x20 ; use blank as padding byte
+verend:
+
+stamp:    DB (stampend-stamp0)
+stamp0:   DB __date__,' ',__time__
+stampend: 
+
+
+; ------------------------------------------------------------------------------
+; We #include the following source files, rather than compiling them 
+; separately, so that they can inherit the value of 'link'.
+
+; This is minimum for 4e4th ...
+#include "4e-deps430G2553.s43" ; MCU dependent code.
+#include "4e-core430.s43"      ; Assembled words, former called 'primitives'.
+#include "4e-hilvl430.s43"     ; forth kernel coded 'high level'.
+#include "4e-boot-uMMT.s43"         ; 4e4th boot procedure.´
+; ... here we have a running forth kernel.
+
+; Include some features...
+#include "4e-LPM-uMMT.s43"          ; handling sleepmodes
+#include "4e-uMMT-words.s43"
+#include "4e-u4th-words-for-microbox.s43"
+
+
+
+/*******************************************************************************
+; DEBUG FORTH EXECUTION 
+; debug serieal
+  PUBLIC DEBUGIP
+DEBUGIP: 
+;  DW  DOTID
+DEBUG1: 
+;   DW TASK
+   DW  KEY  ; 1@A0 test 1=rot,@=grün,A=beide,0=aus
+   DW  DUP  ;,DOTS,CR
+   DW  STORELEDS
+;   DW  COLD
+   DW  EMIT 
+   DW  lit,0,qbran
+   DW  DEBUG1-$
+   DW  bran,-2
+
+/*******************************************************************************
+; debugging only
+  HEADLESS CREATE,DOCOLON
+  HEADLESS ALLOT,DOCOLON
+  HEADLESS BUILDS,DOCOLON
+  HEADLESS ICOMMA,DOCOLON
+  HEADLESS XDOES,DOCOLON
+  HEADLESS IHERE,DOCOLON
+  HEADLESS IALLOT,DOCOLON
+  HEADLESS CELL,DOCOLON
+  HEADLESS PJOUT,DOCOLON
+*******************************************************************************/
+
+
+PUBLIC lastword
+lastword equ link
+
+; for debug map only:
+CamelForthEnd:
+
+        END

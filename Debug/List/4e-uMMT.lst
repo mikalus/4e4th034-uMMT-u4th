@@ -1,0 +1,1014 @@
+###############################################################################
+#                                                                             #
+#     IAR Assembler V6.30.1.934/W32  for MSP430 26/May/2018  17:50:47         #
+#     Copyright 1996-2015 IAR Systems AB.                                     #
+#                                                                             #
+#           Target option =  MSP430                                           #
+#           Source file   =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\4e-uMMT.s43#
+#           List file     =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\List\4e-uMMT.lst#
+#           Object file   =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\Obj\4e-uMMT.r43#
+#           Command line  =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\4e-uMMT.s43 #
+#                            -OC:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\Obj\ #
+#                            -s+ -M<> -w+                                     #
+#                            -LC:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\List\ #
+#                            -t8 -x -r -D__MSP430G2553__                      #
+#                            -IC:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\INC\ #
+#                                                                             #
+###############################################################################
+
+      1    000000              ; Build 4e4th+uMMT on MSP430G2553 MicroBox 
+                                
+      2    000000              ; for Juergen Pintaske, 2016 jun 11. 
+      3    000000              
+      4    000000              ; ----------------------------------------------
+                               --------------------------------
+      5    000000              ; 4e4th is a Forth based on CamelForth
+                                
+      6    000000              ; for the Texas Instruments MSP430 
+      7    000000              ; 
+      8    000000              ; This program is free software; you can
+                                redistribute it and/or modify
+      9    000000              ; it under the terms of the GNU General Public
+                                License as published by
+     10    000000              ; the Free Software Foundation; either version 3
+                                of the License, or
+     11    000000              ; (at your option) any later version.
+     12    000000              ; 
+     13    000000              ; This program is distributed in the hope that
+                                it will be useful,
+     14    000000              ; but WITHOUT ANY WARRANTY; without even the
+                                implied warranty of
+     15    000000              ; MERCHANTABILITY or FITNESS FOR A PARTICULAR
+                                PURPOSE.  See the
+     16    000000              ; GNU General Public License for more details.
+     17    000000              ;
+     18    000000              ; You should have received a copy of the GNU
+                                General Public License
+     19    000000              ; along with this program.  If not, see
+                                <http://www.gnu.org/licenses/>.
+     20    000000              ; 
+     21    000000              ; See LICENSE TERMS in Brads file readme.txt as
+                                well.
+     22    000000              ; ----------------------------------------------
+                               --------------------------------
+     23    000000              ; REVISION HISTORY
+     24    000000              ; 28 Mai 2016
+     25    000000              ;    Dokumentation überarbeitet für makeglossary
+                               .py ; mk
+     26    000000              ; 17 November 2013
+     27    000000              ;    Comments about making ISR in 4e4th
+     28    000000              ; 05 June 2013  
+     29    000000              ;    WORDS can stop and go now.
+     30    000000              ;    LABEL to build ISR code.
+     31    000000              ;    INTERRUPT to store ISR address in Interrupt
+                                vector. 
+     32    000000              ;    VECSAVE VECRESTORE VECBACK added.
+     33    000000              ; 11 Jan 2013 made comments, new features and
+                                words:
+     34    000000              ;    Indicate BASE in ok promt.
+     35    000000              ;    0U.R ( u n -- ) print u with n leading
+                                zeros.
+     36    000000              ;    (VECWIPE) ( -- ) erase ISR flash.
+     37    000000              ;    VECWIPE   ( -- ) do (VECWIPE) and set
+                                default reset vector.
+     38    000000              ; cleaned up/added memory information words:
+     39    000000              ;    RESETADR  ( -- adr)      reset vector
+                                address
+     40    000000              ;    MEMBOT    ( -- adr)      bottom of
+                                USERflash         
+     41    000000              ;    MEMTOP    ( -- adr)      top of USERflash  
+                                      
+     42    000000              ;    MEM       ( -- u)        unused bytes in
+                                flash
+     43    000000              ;    UNUSED    ( -- u)        unused bytes in
+                                RAM
+     44    000000              ;    VARBOT    ( -- adr)      bottom of variable
+                                area
+     45    000000              ;    TOPSEG    ( -- adr)      bottom of top most
+                                flash segment
+     46    000000              ;    VECBOT    ( -- adr)      bottom of
+                                interrupt vectors
+     47    000000              ;    ?         ( adr -- u )   display content of
+                                variable          
+     48    000000              ; 08 Dez 2012 merged brads PARSE etc form
+                                camelforth/340 V4.1
+     49    000000              ;    which fixes the empty string bug.
+     50    000000              ; Dez 2012   Added some features:
+     51    000000              ;   Save variables to info-c and restore from
+                                there on COLD.
+     52    000000              ;   Made upper most flash segment writable; you
+                                may write vectors now.
+     53    000000              ;    VEC! (x adr  -- )     store x to adr in top
+                                most segment
+     54    000000              ;    VEC! will write _any_ flash location.  !!
+                                dangerous!!
+     55    000000              ;   VECWIPE will erase flash but not kernel,
+                                sets reset vector to boot 4e4th.
+     56    000000              ;   Kernal is bigger now, user flash smaler;
+                                
+     57    000000              ;     see: XLINK configuration file for
+                                MSP430G2553 4e-lnk430G2553.xcl
+     58    000000              ; 30 Mar 2012 mk fixed FM/MOD
+     59    000000              ; 26 Feb 2012 mk - adopted to MSP430G2553
+     60    000000              ;   MEM ( -- n ) n = bytes left in flash
+     61    000000              ;   FLASHEND constant MEMTOP
+     62    000000              ;   FLASHSTART constant MEMBOT
+     63    000000              ;   kernel at $E000, IDP = FLASHSTART =
+                                C000
+     64    000000              ;   fixed backspace.
+     65    000000              ;   ok promt at end of line.
+     66    000000              ;   .S prints depth.
+     67    000000              ; ----------------------------------------------
+                               --------------------------------
+     68    000000              
+     69    000000              
+     70    000000              #include "msp430.h"                     ;
+                                #define controlled include file
+     71    000000              #include "4e-CF430G2553forth.h"         ; header
+                                macros and register defs
+     72    000000              
+     73    000000                      EXTERN  UP,UAREA,PADAREA,LSTACK,PSTACK,R
+ STACK
+     74    000000                      EXTERN  TIBAREA,RAMDICT,ROMDICT
+     75    000000                      EXTERN  TIB_SIZE,UAREA_SIZE,VARAREA,VAR_
+                               SIZE,nullirq
+     76    000000              
+     77    000000                      RSEG    CODE                    ; place
+  program in 'CODE' segment
+     78    000000              
+     79    000000              link    SET 0           ; initial dictionary
+                                link
+     80    000000              
+     81    000000              ; ----------------------------------------------
+                               --------------------------------
+     82    000000              ; chip ident
+     83    000000              
+     84    000000              
+     85    000000              ; production fuse 
+     86    000000 FFFF         PROFUSE:  DW 0xFFFF  ; burn fuse to prohibit
+                                                     WIPE 
+     87    000002              
+     88    000002              /***********************************************
+                               ********************************
+     89    000002              
+     90    000002              ; 4e4th
+     91    000002              ; version strings 
+     92    000002              version:  DB (verend-ver0)
+     93    000002              ver0:     DB ' MSP430G2553 LaunchPad - 4E4th '
+                                
+     94    000002                        EVEN 0x20 ; use blank as padding
+                                byte
+     95    000002              verend:
+     96    000002              
+     97    000002              stamp:    DB (stampend-stamp0)
+     98    000002              stamp0:   DB __date__,' ',__time__
+     99    000002              stampend:
+    100    000002              
+    101    000002              ************************************************
+                               *******************************/
+    102    000002              
+    103    000002              ; u4th
+    104    000002              ; version strings 
+    105    000002 27           version:  DB (verend-ver0)
+    106    000003 204D6963726F*ver0:     DB ' MicroBox u4th on MSP430G2553,
+                                               build: ' 
+    107    000029 20                     EVEN 0x20 ; use blank as padding
+                                                    byte
+    108    00002A              verend:
+    109    00002A              
+    110    00002A 16           stamp:    DB (stampend-stamp0)
+    111    00002B 4D6179203236*stamp0:   DB __date__,' ',__time__
+    112    000041              stampend: 
+    113    000041              
+    114    000041              
+    115    000041              ; ----------------------------------------------
+                               --------------------------------
+    116    000041              ; We #include the following source files, rather
+                                than compiling them 
+    117    000041              ; separately, so that they can inherit the value
+                                of 'link'.
+    118    000041              
+    119    000041              ; This is minimum for 4e4th ...
+    120    000041              #include "4e-deps430G2553.s43" ; MCU dependent
+                                code.
+    121    0001D4              #include "4e-core430.s43"      ; Assembled
+                                words, former called 'primitives'.
+    122    0009A6              #include "4e-hilvl430.s43"     ; forth kernel
+                                coded 'high level'.
+    123    001DEC              #include "4e-boot-uMMT.s43"         ; 4e4th boot
+                                procedure.´
+    124    001F96              ; ... here we have a running forth kernel.
+    125    001F96              
+    126    001F96              ; Include some features...
+    127    001F96              #include "4e-LPM-uMMT.s43"          ; handling
+                                sleepmodes
+    128    001FD4              #include "4e-uMMT-words.s43"
+    129    0029E4              ; #include "4e-u4th-words-for-microbox.s43"
+    130    0029E4              
+    131    0029E4              
+    132    0029E4              
+    133    0029E4              /***********************************************
+                               ********************************
+    134    0029E4              ; DEBUG FORTH EXECUTION 
+    135    0029E4              ; debug serieal
+    136    0029E4                PUBLIC DEBUGIP
+    137    0029E4              DEBUGIP: 
+    138    0029E4              ;  DW  DOTID
+    139    0029E4              DEBUG1: 
+    140    0029E4              ;   DW TASK
+    141    0029E4                 DW  KEY  ; 1@A0 test 1=rot,@=grün,A=beide,0=a
+                               us
+    142    0029E4                 DW  DUP  ;,DOTS,CR
+    143    0029E4                 DW  STORELEDS
+    144    0029E4              ;   DW  COLD
+    145    0029E4                 DW  EMIT 
+    146    0029E4                 DW  lit,0,qbran
+    147    0029E4                 DW  DEBUG1-$
+    148    0029E4                 DW  bran,-2
+    149    0029E4              
+    150    0029E4              /***********************************************
+                               ********************************
+    151    0029E4              ; debugging only
+    152    0029E4                HEADLESS CREATE,DOCOLON
+    153    0029E4                HEADLESS ALLOT,DOCOLON
+    154    0029E4                HEADLESS BUILDS,DOCOLON
+    155    0029E4                HEADLESS ICOMMA,DOCOLON
+    156    0029E4                HEADLESS XDOES,DOCOLON
+    157    0029E4                HEADLESS IHERE,DOCOLON
+    158    0029E4                HEADLESS IALLOT,DOCOLON
+    159    0029E4                HEADLESS CELL,DOCOLON
+    160    0029E4                HEADLESS PJOUT,DOCOLON
+    161    0029E4              ************************************************
+                               *******************************/
+    162    0029E4              
+    163    0029E4              
+    164    000000              PUBLIC lastword
+    165    0029E4              lastword equ link
+    166    0029E4              
+    167    0029E4              ; for debug map only:
+    168    0029E4              CamelForthEnd:
+    169    0029E4              
+    170    0029E4                      END
+
+
+
+Segment             Type 	Mode
+----------------------------------------
+CODE                UNTYPED  	REL 
+
+Label               Mode   Type                   Segment    Value/Offset
+------------------------------------------------------------------------------
+ABBS                REL    CONST PUB UNTYP.       CODE       B74 
+ABORT               REL    CONST PUB UNTYP.       CODE       1568 
+ABORTQUOTE          REL    CONST PUB UNTYP.       CODE       1594 
+ACC1                REL    CONST UNTYP.           CODE       E42 
+ACC3                REL    CONST UNTYP.           CODE       E78 
+ACC4                REL    CONST UNTYP.           CODE       E84 
+ACC5                REL    CONST UNTYP.           CODE       E88 
+ACCEPT              REL    CONST PUB UNTYP.       CODE       E38 
+ADC10AE0            ABS    CONST UNTYP.           ASEG       4A 
+ADC10CTL0           ABS    CONST UNTYP.           ASEG       1B0 
+ADC10CTL1           ABS    CONST UNTYP.           ASEG       1B2 
+ADC10DTC0           ABS    CONST UNTYP.           ASEG       48 
+ADC10DTC1           ABS    CONST UNTYP.           ASEG       49 
+ADC10MEM            ABS    CONST UNTYP.           ASEG       1B4 
+ADC10SA             ABS    CONST UNTYP.           ASEG       1BC 
+ADCC                REL    CONST PUB UNTYP.       CODE       297A 
+ADCR                REL    CONST PUB UNTYP.       CODE       29CA 
+ADRTOIN             REL    CONST PUB UNTYP.       CODE       11E8 
+AGAIN               REL    CONST PUB UNTYP.       CODE       17F8 
+ALIGNED             REL    CONST PUB UNTYP.       CODE       A2 
+ALIGNN              REL    CONST PUB UNTYP.       CODE       88 
+ALLOT               REL    CONST PUB UNTYP.       CODE       10F6 
+ANDD                REL    CONST PUB UNTYP.       CODE       5BA 
+ANDIN               REL    CONST PUB UNTYP.       CODE       280C 
+APP                 REL    CONST PUB UNTYP.       CODE       A34 
+APPCRC              REL    CONST PUB UNTYP.       CODE       1E26 
+APPU0               REL    CONST PUB UNTYP.       CODE       B40 
+ATXY                REL    CONST PUB UNTYP.       CODE       1C0C 
+AppU0               ABS    CONST EXT [013] UNTYP. __EXTERNS  Solved Extern 
+BACKSLASH           REL    CONST PUB UNTYP.       CODE       1B94 
+BASE                REL    CONST PUB UNTYP.       CODE       9C4 
+BCSCTL1             ABS    CONST UNTYP.           ASEG       57 
+BCSCTL2             ABS    CONST UNTYP.           ASEG       58 
+BCSCTL3             ABS    CONST UNTYP.           ASEG       53 
+BEGIN               REL    CONST PUB UNTYP.       CODE       17D2 
+BELL                REL    CONST PUB UNTYP.       CODE       1BC8 
+BIN                 REL    CONST PUB UNTYP.       CODE       1C48 
+BITSWAP67           REL    CONST PUB UNTYP.       CODE       244E 
+BLANK               REL    CONST PUB UNTYP.       CODE       AC0 
+BLCN                REL    CONST PUB UNTYP.       CODE       2034 
+BLI0                REL    CONST PUB UNTYP.       CODE       2024 
+BLI1                REL    CONST PUB UNTYP.       CODE       2030 
+BLMINUS             REL    CONST PUB UNTYP.       CODE       2080 
+BLOFF               REL    CONST PUB UNTYP.       CODE       2098 
+BLPLUS              REL    CONST PUB UNTYP.       CODE       2058 
+BOOT                REL    CONST PUB UNTYP.       CODE       1E92 
+BOOTIP              REL    CONST PUB UNTYP.       CODE       1E94 
+BRACCHAR            REL    CONST PUB UNTYP.       CODE       15D8 
+BRACTICK            REL    CONST PUB UNTYP.       CODE       1740 
+BUILDS              REL    CONST PUB UNTYP.       CODE       1630 
+CACTL1              ABS    CONST UNTYP.           ASEG       59 
+CACTL2              ABS    CONST UNTYP.           ASEG       5A 
+CALBC1_12MHZ        ABS    CONST UNTYP.           ASEG       10FB 
+CALBC1_16MHZ        ABS    CONST UNTYP.           ASEG       10F9 
+CALBC1_1MHZ         ABS    CONST UNTYP.           ASEG       10FF 
+CALBC1_8MHZ         ABS    CONST UNTYP.           ASEG       10FD 
+CALDCO_12MHZ        ABS    CONST UNTYP.           ASEG       10FA 
+CALDCO_16MHZ        ABS    CONST UNTYP.           ASEG       10F8 
+CALDCO_1MHZ         ABS    CONST UNTYP.           ASEG       10FE 
+CALDCO_8MHZ         ABS    CONST UNTYP.           ASEG       10FC 
+CAPD                ABS    CONST UNTYP.           ASEG       5B 
+CAPITALIZE          REL    CONST PUB UNTYP.       CODE       1314 
+CAPS                REL    CONST PUB UNTYP.       CODE       A40 
+CAPS1               REL    CONST UNTYP.           CODE       132A 
+CAPS2               REL    CONST UNTYP.           CODE       1338 
+CCOMMA              REL    CONST PUB UNTYP.       CODE       111A 
+CCRC                REL    CONST PUB UNTYP.       CODE       1B20 
+CELL                REL    CONST PUB UNTYP.       CODE       B8 
+CELLPLUS            REL    CONST PUB UNTYP.       CODE       C6 
+CELLS               REL    CONST PUB UNTYP.       CODE       D8 
+CEXIT               REL    CONST PUB UNTYP.       CODE       17E 
+CFETCH              REL    CONST PUB UNTYP.       CODE       3DE 
+CGAP                REL    CONST PUB UNTYP.       CODE       2912 
+CHARPLUS            REL    CONST PUB UNTYP.       CODE       E4 
+CHARR               REL    CONST PUB UNTYP.       CODE       15C2 
+CHARS               REL    CONST PUB UNTYP.       CODE       F0 
+CMOVE               REL    CONST PUB UNTYP.       CODE       894 
+CMOVEUP             REL    CONST PUB UNTYP.       CODE       8B8 
+CMOVE_1             REL    CONST UNTYP.           CODE       89E 
+CMOVE_X             REL    CONST UNTYP.           CODE       8A8 
+CMOVU_1             REL    CONST UNTYP.           CODE       8C6 
+CMOVU_X             REL    CONST UNTYP.           CODE       8D2 
+COLD                REL    CONST PUB UNTYP.       CODE       1EF2 
+COLDIP              REL    CONST PUB UNTYP.       CODE       1EF4 
+COLON               REL    CONST PUB UNTYP.       CODE       171C 
+COMMA               REL    CONST PUB UNTYP.       CODE       1104 
+COMMABRANCH         REL    CONST PUB UNTYP.       CODE       194 
+COMMACALL           REL    CONST PUB UNTYP.       CODE       13A 
+COMMACF             REL    CONST PUB UNTYP.       CODE       122 
+COMMADEST           REL    CONST PUB UNTYP.       CODE       1A2 
+COMMAJMP            REL    CONST PUB UNTYP.       CODE       14E 
+COMMANONE           REL    CONST PUB UNTYP.       CODE       1CC 
+COMMAXT             REL    CONST PUB UNTYP.       CODE       10A 
+CONDIN0             REL    CONST PUB UNTYP.       CODE       27B4 
+CONSTANT            REL    CONST PUB UNTYP.       CODE       238 
+COR                 REL    CONST PUB UNTYP.       CODE       B08 
+CORPOWERON          ABS    CONST UNTYP.           CODE       186 
+CORREST             ABS    CONST UNTYP.           CODE       18E 
+COUNT               REL    CONST PUB UNTYP.       CODE       D5C 
+COUNTER             REL    CONST PUB UNTYP.       CODE       2442 
+CR                  REL    CONST PUB UNTYP.       CODE       D86 
+CRC                 REL    CONST PUB UNTYP.       CODE       1B44 
+CREATE              REL    CONST PUB UNTYP.       CODE       1646 
+CSTORE              REL    CONST PUB UNTYP.       CODE       3EC 
+CamelForthEnd       REL    CONST UNTYP.           CODE       29E4 
+DABS                REL    CONST PUB UNTYP.       CODE       BBA 
+DAH                 REL    CONST PUB UNTYP.       CODE       28E8 
+DCOCTL              ABS    CONST UNTYP.           ASEG       56 
+DDP                 REL    CONST PUB UNTYP.       CODE       9DC 
+DECIMAL             REL    CONST PUB UNTYP.       CODE       10BC 
+DEPTH               REL    CONST PUB UNTYP.       CODE       1922 
+DIGITQ              REL    CONST PUB UNTYP.       CODE       1364 
+DIT                 REL    CONST PUB UNTYP.       CODE       28C4 
+DITV                REL    CONST PUB UNTYP.       CODE       2018 
+DIV1                REL    CONST UNTYP.           CODE       842 
+DIV2                REL    CONST UNTYP.           CODE       848 
+DIV3                REL    CONST UNTYP.           CODE       85C 
+DIV4                REL    CONST UNTYP.           CODE       85E 
+DIVIDE              REL    CONST UNTYP.           CODE       83C 
+DNEG1               REL    CONST UNTYP.           CODE       BB0 
+DNEGATE             REL    CONST PUB UNTYP.       CODE       B88 
+DO                  REL    CONST PUB UNTYP.       CODE       185C 
+DOALIAS             REL    CONST PUB UNTYP.       CODE       278 
+DOCODE              REL    CONST UNTYP.           CODE       Not solved 
+DOCOLON             REL    CONST PUB UNTYP.       CODE       20E 
+DOCON               REL    CONST PUB UNTYP.       CODE       240 
+DOCR                REL    CONST PUB UNTYP.       CODE       D70 
+DOEMIT              REL    CONST PUB UNTYP.       CODE       4C 
+DOES                REL    CONST PUB UNTYP.       CODE       167A 
+DOKEY               REL    CONST PUB UNTYP.       CODE       68 
+DOROM               REL    CONST PUB UNTYP.       CODE       24C 
+DOT                 REL    CONST PUB UNTYP.       CODE       1098 
+DOTBOOTVERSION      REL    CONST PUB UNTYP.       CODE       1DEC 
+DOTCOLD             REL    CONST PUB UNTYP.       CODE       1EDC 
+DOTERRN             REL    CONST PUB UNTYP.       CODE       DFA 
+DOTQUOTE            REL    CONST PUB UNTYP.       CODE       F64 
+DOTS                REL    CONST PUB UNTYP.       CODE       1AE0 
+DOTS1               REL    CONST UNTYP.           CODE       1B10 
+DOTS2               REL    CONST UNTYP.           CODE       1B1E 
+DOTSTATUS           REL    CONST PUB UNTYP.       CODE       14F0 
+DOTVER              REL    CONST PUB UNTYP.       CODE       1BA8 
+DOTWOCON            REL    CONST PUB UNTYP.       CODE       1B7E 
+DOUSER              REL    CONST PUB UNTYP.       CODE       268 
+DOVAR               REL    CONST PUB UNTYP.       CODE       240 
+DROP                REL    CONST PUB UNTYP.       CODE       2BE 
+DTOI                REL    CONST PUB UNTYP.       CODE       518 
+DTOI_BYTE           REL    CONST UNTYP.           CODE       54C 
+DTOI_END            REL    CONST UNTYP.           CODE       552 
+DTOI_LOOP           REL    CONST UNTYP.           CODE       522 
+DTOI_WORD           REL    CONST UNTYP.           CODE       53A 
+DTOI_X              REL    CONST UNTYP.           CODE       564 
+DUMP                REL    CONST PUB UNTYP.       CODE       1A74 
+DUP                 REL    CONST PUB UNTYP.       CODE       298 
+ELSS                REL    CONST PUB UNTYP.       CODE       17B6 
+EMIT                REL    CONST PUB UNTYP.       CODE       978 
+EMITLOOPx           REL    CONST UNTYP.           CODE       4E 
+ENDLOOP             REL    CONST PUB UNTYP.       CODE       1878 
+ENVIRONMENTQ        REL    CONST PUB UNTYP.       CODE       1940 
+EQUAL               REL    CONST PUB UNTYP.       CODE       6B6 
+ESC0                REL    CONST UNTYP.           CODE       1C33 
+ESC1                REL    CONST UNTYP.           CODE       1C36 
+ESCPAR              REL    CONST PUB UNTYP.       CODE       1BD2 
+ETC                 REL    CONST PUB UNTYP.       CODE       20E4 
+ETC0                REL    CONST PUB UNTYP.       CODE       2040 
+ETC1                REL    CONST PUB UNTYP.       CODE       204C 
+ETCFETCH            REL    CONST PUB UNTYP.       CODE       2126 
+ETCOFF              REL    CONST PUB UNTYP.       CODE       2114 
+EVALUATE            REL    CONST PUB UNTYP.       CODE       14CE 
+EXECUTE             REL    CONST PUB UNTYP.       CODE       1E0 
+EXIT                REL    CONST PUB UNTYP.       CODE       206 
+FACTORY             REL    CONST PUB UNTYP.       CODE       1F1A 
+FACTORYIP           REL    CONST PUB UNTYP.       CODE       1F1C 
+FALSE               REL    CONST PUB UNTYP.       CODE       1C6A 
+FCTL1               ABS    CONST UNTYP.           ASEG       128 
+FCTL2               ABS    CONST UNTYP.           ASEG       12A 
+FCTL3               ABS    CONST UNTYP.           ASEG       12C 
+FETCH               REL    CONST PUB UNTYP.       CODE       3BE 
+FILL                REL    CONST PUB UNTYP.       CODE       870 
+FILL_1              REL    CONST UNTYP.           CODE       87A 
+FILL_X              REL    CONST UNTYP.           CODE       884 
+FIND                REL    CONST PUB UNTYP.       CODE       12B4 
+FIND1               REL    CONST UNTYP.           CODE       12BA 
+FIND2               REL    CONST UNTYP.           CODE       12D2 
+FIND3               REL    CONST UNTYP.           CODE       12F0 
+FLALIGNED           REL    CONST PUB UNTYP.       CODE       1962 
+FLERASE             REL    CONST PUB UNTYP.       CODE       406 
+FLE_1               REL    CONST UNTYP.           CODE       40C 
+FLE_INFO            REL    CONST UNTYP.           CODE       428 
+FLE_OK              REL    CONST UNTYP.           CODE       434 
+FLE_VEC             REL    CONST UNTYP.           CODE       41C 
+FLE_X               REL    CONST UNTYP.           CODE       46C 
+FL_INFO             REL    CONST UNTYP.           CODE       466 
+FMMOD1              REL    CONST UNTYP.           CODE       C3E 
+FMSLASHMOD          REL    CONST PUB UNTYP.       CODE       C18 
+FRQ                 REL    CONST PUB UNTYP.       CODE       2636 
+GAP                 REL    CONST PUB UNTYP.       CODE       28A4 
+GREATER             REL    CONST PUB UNTYP.       CODE       6EC 
+HEADR               REL    CONST PUB UNTYP.       CODE       1602 
+HERE                REL    CONST PUB UNTYP.       CODE       10E4 
+HEX                 REL    CONST PUB UNTYP.       CODE       10D0 
+HIDE                REL    CONST PUB UNTYP.       CODE       16CC 
+HOLD                REL    CONST PUB UNTYP.       CODE       FDC 
+HP                  REL    CONST PUB UNTYP.       CODE       A04 
+IALLOT              REL    CONST PUB UNTYP.       CODE       1146 
+ICCOMMA             REL    CONST PUB UNTYP.       CODE       116C 
+ICOMMA              REL    CONST PUB UNTYP.       CODE       1154 
+ICSTORE             REL    CONST PUB UNTYP.       CODE       4CC 
+ICST_INFO           REL    CONST UNTYP.           CODE       4E0 
+ICST_OK             REL    CONST UNTYP.           CODE       4EC 
+ICST_RAM            REL    CONST UNTYP.           CODE       4FC 
+IDP                 REL    CONST PUB UNTYP.       CODE       A1A 
+IE1                 ABS    CONST UNTYP.           ASEG       0 
+IE2                 ABS    CONST UNTYP.           ASEG       1 
+IFF                 REL    CONST PUB UNTYP.       CODE       178E 
+IFG1                ABS    CONST UNTYP.           ASEG       2 
+IFG2                ABS    CONST UNTYP.           ASEG       3 
+IHERE               REL    CONST PUB UNTYP.       CODE       1134 
+II                  REL    CONST PUB UNTYP.       CODE       7C2 
+IMMEDIATE           REL    CONST PUB UNTYP.       CODE       1706 
+IMMEDQ              REL    CONST PUB UNTYP.       CODE       129C 
+INFETCH             REL    CONST PUB UNTYP.       CODE       249A 
+INFOB               REL    CONST PUB UNTYP.       CODE       B16 
+INFOC               REL    CONST PUB UNTYP.       CODE       B24 
+INFOD               REL    CONST PUB UNTYP.       CODE       B32 
+INITP2              REL    CONST PUB UNTYP.       CODE       22C4 
+INITUMMT            REL    CONST PUB UNTYP.       CODE       1F74 
+INTER1              REL    CONST UNTYP.           CODE       1468 
+INTER2              REL    CONST UNTYP.           CODE       1494 
+INTER3              REL    CONST UNTYP.           CODE       1496 
+INTER4              REL    CONST UNTYP.           CODE       149A 
+INTER5              REL    CONST UNTYP.           CODE       14A6 
+INTER6              REL    CONST UNTYP.           CODE       14BA 
+INTER8              REL    CONST UNTYP.           CODE       14BA 
+INTER9              REL    CONST UNTYP.           CODE       14BE 
+INTERPRET           REL    CONST PUB UNTYP.       CODE       145C 
+INTOOUT             REL    CONST PUB UNTYP.       CODE       2790 
+INVERT              REL    CONST PUB UNTYP.       CODE       5EA 
+INVERTIN0           REL    CONST PUB UNTYP.       CODE       27E0 
+ISQUOTE             REL    CONST PUB UNTYP.       CODE       F0A 
+ISTORE              REL    CONST PUB UNTYP.       CODE       478 
+IST_INFO            REL    CONST UNTYP.           CODE       490 
+IST_OK              REL    CONST UNTYP.           CODE       49C 
+IST_RAM             REL    CONST UNTYP.           CODE       4AC 
+IST_X               REL    CONST UNTYP.           CODE       4BE 
+ITHERE              REL    CONST PUB UNTYP.       CODE       1E06 
+ITOD                REL    CONST PUB UNTYP.       CODE       8E0 
+IWORD               REL    CONST PUB UNTYP.       CODE       F7A 
+IWORD1              REL    CONST UNTYP.           CODE       F7E 
+IWORDC              REL    CONST PUB UNTYP.       CODE       F8C 
+JJ                  REL    CONST PUB UNTYP.       CODE       7D8 
+KEY                 REL    CONST PUB UNTYP.       CODE       966 
+KEYLOOPx            REL    CONST UNTYP.           CODE       6A 
+KEYQ                REL    CONST PUB UNTYP.       CODE       98A 
+L$002               REL    CONST UNTYP.           CODE       812 
+L$01                REL    CONST UNTYP.           CODE       81A 
+L0                  REL    CONST PUB UNTYP.       CODE       A86 
+LATEST              REL    CONST PUB UNTYP.       CODE       9FA 
+LDUMP1              REL    CONST UNTYP.           CODE       1A7E 
+LDUMP2              REL    CONST UNTYP.           CODE       1A98 
+LDUMP3              REL    CONST UNTYP.           CODE       1AB6 
+LEAV                REL    CONST PUB UNTYP.       CODE       18BE 
+LEFTBRACKET         REL    CONST PUB UNTYP.       CODE       16A8 
+LEFTMOST            REL    CONST PUB UNTYP.       CODE       25E0 
+LESS                REL    CONST PUB UNTYP.       CODE       6D8 
+LESSNUM             REL    CONST PUB UNTYP.       CODE       FF4 
+LFROM               REL    CONST PUB UNTYP.       CODE       1844 
+LITER1              REL    CONST UNTYP.           CODE       1358 
+LITERAL             REL    CONST PUB UNTYP.       CODE       1346 
+LOO                 REL    CONST PUB UNTYP.       CODE       1896 
+LOOP1               REL    CONST UNTYP.           CODE       187E 
+LOOP2               REL    CONST UNTYP.           CODE       188C 
+LP                  REL    CONST PUB UNTYP.       CODE       A0E 
+LSHIFT              REL    CONST PUB UNTYP.       CODE       656 
+LSH_1               REL    CONST UNTYP.           CODE       660 
+LSH_X               REL    CONST UNTYP.           CODE       666 
+LSTACK              ABS    CONST EXT [003] UNTYP. __EXTERNS  Solved Extern 
+MACU                REL    CONST UNTYP.           CODE       80E 
+MARKER              REL    CONST PUB UNTYP.       CODE       1980 
+MAX                 REL    CONST PUB UNTYP.       CODE       CB0 
+MAX1                REL    CONST UNTYP.           CODE       CBC 
+MEM                 REL    CONST PUB UNTYP.       CODE       1D76 
+MEMBOT              REL    CONST PUB UNTYP.       CODE       1D5C 
+MEMTOP              REL    CONST PUB UNTYP.       CODE       1D6A 
+MIDDLE              REL    CONST PUB UNTYP.       CODE       25FC 
+MIN                 REL    CONST PUB UNTYP.       CODE       CC8 
+MIN1                REL    CONST UNTYP.           CODE       CD4 
+MINUS               REL    CONST PUB UNTYP.       CODE       5A6 
+MODD                REL    CONST PUB UNTYP.       CODE       C7C 
+MOVE                REL    CONST PUB UNTYP.       CODE       18F6 
+MOVE1               REL    CONST UNTYP.           CODE       1912 
+MOVE2               REL    CONST UNTYP.           CODE       1916 
+MPLUS               REL    CONST PUB UNTYP.       CODE       590 
+MPYU                REL    CONST UNTYP.           CODE       80A 
+MS                  REL    CONST PUB UNTYP.       CODE       1CB6 
+MSTAR               REL    CONST PUB UNTYP.       CODE       BC8 
+NEGATE              REL    CONST PUB UNTYP.       CODE       5FC 
+NEQUAL              REL    CONST PUB UNTYP.       CODE       95C 
+NEWEST              REL    CONST PUB UNTYP.       CODE       A28 
+NEWLINE             REL    CONST PUB UNTYP.       CODE       A70 
+NFATOCFA            REL    CONST PUB UNTYP.       CODE       1282 
+NFATOLFA            REL    CONST PUB UNTYP.       CODE       126C 
+NINIT               REL    CONST PUB UNTYP.       CODE       AFC 
+NIP                 REL    CONST PUB UNTYP.       CODE       318 
+NODUP               REL    CONST UNTYP.           CODE       2B2 
+NOOP                REL    CONST PUB UNTYP.       CODE       1950 
+NOTEQUAL            REL    CONST PUB UNTYP.       CODE       6CA 
+NUM                 REL    CONST PUB UNTYP.       CODE       1028 
+NUM1                REL    CONST PUB UNTYP.       CODE       217A 
+NUM2                REL    CONST PUB UNTYP.       CODE       2190 
+NUM4                REL    CONST PUB UNTYP.       CODE       21A8 
+NUMGREATER          REL    CONST PUB UNTYP.       CODE       1054 
+NUMS                REL    CONST PUB UNTYP.       CODE       103E 
+NUMS1               REL    CONST UNTYP.           CODE       1040 
+OFFTIME             REL    CONST PUB UNTYP.       CODE       2510 
+ONEMINUS            REL    CONST PUB UNTYP.       CODE       61A 
+ONEMS               REL    CONST PUB UNTYP.       CODE       1C94 
+ONEPLUS             REL    CONST PUB UNTYP.       CODE       60C 
+ONTIME              REL    CONST PUB UNTYP.       CODE       24E4 
+ORIN                REL    CONST PUB UNTYP.       CODE       2840 
+ORR                 REL    CONST PUB UNTYP.       CODE       5C8 
+OUTADR              REL    CONST PUB UNTYP.       CODE       200C 
+OUTL                REL    CONST PUB UNTYP.       CODE       24B2 
+OUTSTORE            REL    CONST PUB UNTYP.       CODE       247A 
+OVER                REL    CONST PUB UNTYP.       CODE       2E4 
+P1                  REL    CONST PUB UNTYP.       CODE       1DD4 
+P1DIR               ABS    CONST UNTYP.           ASEG       22 
+P1IE                ABS    CONST UNTYP.           ASEG       25 
+P1IES               ABS    CONST UNTYP.           ASEG       24 
+P1IFG               ABS    CONST UNTYP.           ASEG       23 
+P1IN                ABS    CONST UNTYP.           ASEG       20 
+P1OUT               ABS    CONST UNTYP.           ASEG       21 
+P1REN               ABS    CONST UNTYP.           ASEG       27 
+P1SEL               ABS    CONST UNTYP.           ASEG       26 
+P1SEL2              ABS    CONST UNTYP.           ASEG       41 
+P2                  REL    CONST PUB UNTYP.       CODE       1DDE 
+P2DIR               ABS    CONST UNTYP.           ASEG       2A 
+P2IE                ABS    CONST UNTYP.           ASEG       2D 
+P2IES               ABS    CONST UNTYP.           ASEG       2C 
+P2IFG               ABS    CONST UNTYP.           ASEG       2B 
+P2IN                ABS    CONST UNTYP.           ASEG       28 
+P2OUT               ABS    CONST UNTYP.           ASEG       29 
+P2REN               ABS    CONST UNTYP.           ASEG       2F 
+P2SEL               ABS    CONST UNTYP.           ASEG       2E 
+P2SEL2              ABS    CONST UNTYP.           ASEG       42 
+P3                  REL    CONST PUB UNTYP.       CODE       1DE8 
+P3DIR               ABS    CONST UNTYP.           ASEG       1A 
+P3IN                ABS    CONST UNTYP.           ASEG       18 
+P3OUT               ABS    CONST UNTYP.           ASEG       19 
+P3REN               ABS    CONST UNTYP.           ASEG       10 
+P3SEL               ABS    CONST UNTYP.           ASEG       1B 
+P3SEL2              ABS    CONST UNTYP.           ASEG       43 
+PAD                 REL    CONST PUB UNTYP.       CODE       A7C 
+PADAREA             ABS    CONST EXT [002] UNTYP. __EXTERNS  Solved Extern 
+PAGEE               REL    CONST PUB UNTYP.       CODE       1C2C 
+PAREN               REL    CONST PUB UNTYP.       CODE       15EC 
+PARENUDOTR          REL    CONST PUB UNTYP.       CODE       1A0E 
+PARENWIPE           REL    CONST PUB UNTYP.       CODE       1F4E 
+PARSE               REL    CONST PUB UNTYP.       CODE       120A 
+PARSE1              REL    CONST UNTYP.           CODE       1226 
+PLUS                REL    CONST PUB UNTYP.       CODE       570 
+PLUSLOOP            REL    CONST PUB UNTYP.       CODE       18AA 
+PLUSSTORE           REL    CONST PUB UNTYP.       CODE       57E 
+PN                  REL    CONST PUB UNTYP.       CODE       1BE2 
+POSITION            REL    CONST PUB UNTYP.       CODE       265E 
+POST1               REL    CONST UNTYP.           CODE       1784 
+POST2               REL    CONST UNTYP.           CODE       1786 
+POSTPONE            REL    CONST PUB UNTYP.       CODE       175A 
+PROFUSE             REL    CONST UNTYP.           CODE       0 
+PROFUSEADR          REL    CONST PUB UNTYP.       CODE       1F34 
+PROMPT              REL    CONST PUB UNTYP.       CODE       14FC 
+PROMPT1             REL    CONST UNTYP.           CODE       152E 
+PSTACK              ABS    CONST EXT [004] UNTYP. __EXTERNS  Solved Extern 
+PUSHTOS             REL    CONST UNTYP.           CODE       29A 
+PWM                 REL    CONST PUB UNTYP.       CODE       26E0 
+QABO1               REL    CONST UNTYP.           CODE       1586 
+QABORT              REL    CONST PUB UNTYP.       CODE       157A 
+QDNEGATE            REL    CONST PUB UNTYP.       CODE       BA6 
+QDUP                REL    CONST PUB UNTYP.       CODE       2AC 
+QNEG1               REL    CONST UNTYP.           CODE       B6A 
+QNEGATE             REL    CONST PUB UNTYP.       CODE       B60 
+QNUM1               REL    CONST UNTYP.           CODE       143C 
+QNUM2               REL    CONST UNTYP.           CODE       1448 
+QNUM3               REL    CONST UNTYP.           CODE       144C 
+QNUMBER             REL    CONST PUB UNTYP.       CODE       1418 
+QQ                  REL    CONST PUB UNTYP.       CODE       1DC6 
+QQQ                 REL    CONST PUB UNTYP.       CODE       21C6 
+QSIGN               REL    CONST PUB UNTYP.       CODE       13A0 
+QSIGN1              REL    CONST UNTYP.           CODE       13CA 
+QSTACK              REL    CONST PUB UNTYP.       CODE       1186 
+QTIB                REL    CONST PUB UNTYP.       CODE       E1A 
+QTIB1               REL    CONST UNTYP.           CODE       E2C 
+QUIT                REL    CONST PUB UNTYP.       CODE       1538 
+QUIT1               REL    CONST UNTYP.           CODE       154A 
+QUITIP              REL    CONST PUB UNTYP.       CODE       153A 
+RAMDICT             ABS    CONST EXT [007] UNTYP. __EXTERNS  Solved Extern 
+RECURSE             REL    CONST PUB UNTYP.       CODE       1696 
+REPEAT              REL    CONST PUB UNTYP.       CODE       1820 
+REVEAL              REL    CONST PUB UNTYP.       CODE       16EC 
+RFETCH              REL    CONST PUB UNTYP.       CODE       34A 
+RFROM               REL    CONST PUB UNTYP.       CODE       336 
+RIGHTBRACKET        REL    CONST PUB UNTYP.       CODE       16B8 
+RIGHTMOST           REL    CONST PUB UNTYP.       CODE       261C 
+RLAA                REL    CONST PUB UNTYP.       CODE       71A 
+ROMDICT             ABS    CONST EXT [-001] UNTYP. __EXTERNS  Solved Extern 
+ROT                 REL    CONST PUB UNTYP.       CODE       2FC 
+RPFETCH             REL    CONST PUB UNTYP.       CODE       388 
+RPSTORE             REL    CONST PUB UNTYP.       CODE       39E 
+RSHIFT              REL    CONST PUB UNTYP.       CODE       676 
+RSH_1               REL    CONST UNTYP.           CODE       680 
+RSH_X               REL    CONST UNTYP.           CODE       688 
+RSTACK              ABS    CONST EXT [005] UNTYP. __EXTERNS  Solved Extern 
+RZERO               REL    CONST PUB UNTYP.       CODE       A90 
+S0                  REL    CONST PUB UNTYP.       CODE       A9A 
+S2                  REL    CONST PUB UNTYP.       CODE       213E 
+S2Q                 REL    CONST PUB UNTYP.       CODE       214C 
+S3                  REL    CONST PUB UNTYP.       CODE       215C 
+S3Q                 REL    CONST PUB UNTYP.       CODE       216A 
+SAVE                REL    CONST PUB UNTYP.       CODE       1E54 
+SCAN                REL    CONST PUB UNTYP.       CODE       910 
+SCAN_1              REL    CONST UNTYP.           CODE       91A 
+SCAN_X              REL    CONST UNTYP.           CODE       924 
+SCOUNTER            REL    CONST PUB UNTYP.       CODE       240C 
+SEMICOLON           REL    CONST PUB UNTYP.       CODE       172E 
+SEMIPN              REL    CONST PUB UNTYP.       CODE       1BF6 
+SEQUAL              REL    CONST PUB UNTYP.       CODE       934 
+SEQU_1              REL    CONST UNTYP.           CODE       93E 
+SEQU_X              REL    CONST UNTYP.           CODE       952 
+SERVO               REL    CONST PUB UNTYP.       CODE       26AC 
+SIGN                REL    CONST PUB UNTYP.       CODE       106C 
+SIGN1               REL    CONST UNTYP.           CODE       107A 
+SKIP                REL    CONST PUB UNTYP.       CODE       8EA 
+SKIP_1              REL    CONST UNTYP.           CODE       8F4 
+SKIP_X              REL    CONST UNTYP.           CODE       8FE 
+SLASH               REL    CONST PUB UNTYP.       CODE       C6C 
+SLASHMOD            REL    CONST PUB UNTYP.       CODE       C5A 
+SLASHSTRING         REL    CONST PUB UNTYP.       CODE       11B4 
+SLEEPMODE4          REL    CONST PUB UNTYP.       CODE       1F9E 
+SLEFT               REL    CONST PUB UNTYP.       CODE       26CC 
+SLIM                REL    CONST PUB UNTYP.       CODE       2692 
+SMISMATCH           REL    CONST UNTYP.           CODE       94C 
+SMSLASHREM          REL    CONST PUB UNTYP.       CODE       BEA 
+SOS                 REL    CONST PUB UNTYP.       CODE       294A 
+SOURCE              REL    CONST PUB UNTYP.       CODE       11A0 
+SPACE               REL    CONST PUB UNTYP.       CODE       D9A 
+SPACES              REL    CONST PUB UNTYP.       CODE       DAC 
+SPCS1               REL    CONST UNTYP.           CODE       DAE 
+SPCS2               REL    CONST UNTYP.           CODE       DBC 
+SPFETCH             REL    CONST PUB UNTYP.       CODE       360 
+SPSTORE             REL    CONST PUB UNTYP.       CODE       376 
+SQUOTE              REL    CONST PUB UNTYP.       CODE       F32 
+SRIGHT              REL    CONST PUB UNTYP.       CODE       26BA 
+SSMOD               REL    CONST PUB UNTYP.       CODE       C8E 
+STAR                REL    CONST PUB UNTYP.       CODE       C4A 
+STARSLASH           REL    CONST PUB UNTYP.       CODE       CA0 
+STATE               REL    CONST PUB UNTYP.       CODE       9D2 
+STOD                REL    CONST PUB UNTYP.       CODE       B4C 
+STORCOLON           REL    CONST PUB UNTYP.       CODE       164 
+STORE               REL    CONST PUB UNTYP.       CODE       3CC 
+STORECF             REL    CONST PUB UNTYP.       CODE       116 
+STOREDEST           REL    CONST PUB UNTYP.       CODE       1B6 
+SWAP                REL    CONST PUB UNTYP.       CODE       2CE 
+SWAPBYTES           REL    CONST PUB UNTYP.       CODE       628 
+SWEEP               REL    CONST PUB UNTYP.       CODE       276A 
+SWH0                REL    CONST PUB UNTYP.       CODE       1FE8 
+SWH1                REL    CONST PUB UNTYP.       CODE       1FDC 
+SWL0                REL    CONST PUB UNTYP.       CODE       2000 
+SWL1                REL    CONST PUB UNTYP.       CODE       1FF4 
+TA0CCR0             ABS    CONST UNTYP.           ASEG       172 
+TA0CCR1             ABS    CONST UNTYP.           ASEG       174 
+TA0CCR2             ABS    CONST UNTYP.           ASEG       176 
+TA0CCTL0            ABS    CONST UNTYP.           ASEG       162 
+TA0CCTL1            ABS    CONST UNTYP.           ASEG       164 
+TA0CCTL2            ABS    CONST UNTYP.           ASEG       166 
+TA0CTL              ABS    CONST UNTYP.           ASEG       160 
+TA0IV               ABS    CONST UNTYP.           ASEG       12E 
+TA0R                ABS    CONST UNTYP.           ASEG       170 
+TA1CCR0             ABS    CONST UNTYP.           ASEG       192 
+TA1CCR1             ABS    CONST UNTYP.           ASEG       194 
+TA1CCR2             ABS    CONST UNTYP.           ASEG       196 
+TA1CCTL0            ABS    CONST UNTYP.           ASEG       182 
+TA1CCTL1            ABS    CONST UNTYP.           ASEG       184 
+TA1CCTL2            ABS    CONST UNTYP.           ASEG       186 
+TA1CTL              ABS    CONST UNTYP.           ASEG       180 
+TA1IV               ABS    CONST UNTYP.           ASEG       11E 
+TA1R                ABS    CONST UNTYP.           ASEG       190 
+TABLE               REL    CONST PUB UNTYP.       CODE       1C78 
+THEN                REL    CONST PUB UNTYP.       CODE       17A4 
+TIB                 REL    CONST PUB UNTYP.       CODE       AA6 
+TIBAREA             ABS    CONST EXT [006] UNTYP. __EXTERNS  Solved Extern 
+TIBSIZE             REL    CONST PUB UNTYP.       CODE       AB6 
+TIB_SIZE            ABS    CONST EXT [008] UNTYP. __EXTERNS  Solved Extern 
+TICK                REL    CONST PUB UNTYP.       CODE       15A6 
+TICKSOURCE          REL    CONST PUB UNTYP.       CODE       9EC 
+TLV_ADC10_1_LEN     ABS    CONST UNTYP.           ASEG       10DB 
+TLV_ADC10_1_TAG     ABS    CONST UNTYP.           ASEG       10DA 
+TLV_CHECKSUM        ABS    CONST UNTYP.           ASEG       10C0 
+TLV_DCO_30_LEN      ABS    CONST UNTYP.           ASEG       10F7 
+TLV_DCO_30_TAG      ABS    CONST UNTYP.           ASEG       10F6 
+TOBODY              REL    CONST PUB UNTYP.       CODE       FC 
+TOCOUNTED           REL    CONST PUB UNTYP.       CODE       11D0 
+TODIGIT             REL    CONST PUB UNTYP.       CODE       1008 
+TOIN                REL    CONST PUB UNTYP.       CODE       9B8 
+TOL                 REL    CONST PUB UNTYP.       CODE       182E 
+TONUM1              REL    CONST UNTYP.           CODE       13DA 
+TONUM2              REL    CONST UNTYP.           CODE       13F0 
+TONUM3              REL    CONST UNTYP.           CODE       140A 
+TONUMBER            REL    CONST PUB UNTYP.       CODE       13D8 
+TOPSEG              REL    CONST PUB UNTYP.       CODE       1DAE 
+TOR                 REL    CONST PUB UNTYP.       CODE       326 
+TOSFALSE            REL    CONST UNTYP.           CODE       6BE 
+TOSTRUE             REL    CONST UNTYP.           CODE       6E0 
+TRUE                REL    CONST PUB UNTYP.       CODE       1C5C 
+TUCK                REL    CONST PUB UNTYP.       CODE       3B0 
+TWOCONSTANT         REL    CONST PUB UNTYP.       CODE       1B74 
+TWODROP             REL    CONST PUB UNTYP.       CODE       D0A 
+TWODUP              REL    CONST PUB UNTYP.       CODE       D1A 
+TWOFETCH            REL    CONST PUB UNTYP.       CODE       CDE 
+TWOOVER             REL    CONST PUB UNTYP.       CODE       D42 
+TWOSLASH            REL    CONST PUB UNTYP.       CODE       644 
+TWOSTAR             REL    CONST PUB UNTYP.       CODE       636 
+TWOSTORE            REL    CONST PUB UNTYP.       CODE       CF2 
+TWOSWAP             REL    CONST PUB UNTYP.       CODE       D2C 
+TYP                 REL    CONST PUB UNTYP.       CODE       E9A 
+TYP3                REL    CONST UNTYP.           CODE       EAA 
+TYP4                REL    CONST UNTYP.           CODE       EB8 
+TYP5                REL    CONST UNTYP.           CODE       EBA 
+U0                  REL    CONST PUB UNTYP.       CODE       9AC 
+UAREA               ABS    CONST EXT [001] UNTYP. __EXTERNS  Solved Extern 
+UAREA_SIZE          ABS    CONST EXT [-001] UNTYP. __EXTERNS  Solved Extern 
+UCA0ABCTL           ABS    CONST UNTYP.           ASEG       5D 
+UCA0BR0             ABS    CONST UNTYP.           ASEG       62 
+UCA0BR1             ABS    CONST UNTYP.           ASEG       63 
+UCA0CTL0            ABS    CONST UNTYP.           ASEG       60 
+UCA0CTL1            ABS    CONST UNTYP.           ASEG       61 
+UCA0IRRCTL          ABS    CONST UNTYP.           ASEG       5F 
+UCA0IRTCTL          ABS    CONST UNTYP.           ASEG       5E 
+UCA0MCTL            ABS    CONST UNTYP.           ASEG       64 
+UCA0RXBUF           ABS    CONST UNTYP.           ASEG       66 
+UCA0STAT            ABS    CONST UNTYP.           ASEG       65 
+UCA0TXBUF           ABS    CONST UNTYP.           ASEG       67 
+UCB0BR0             ABS    CONST UNTYP.           ASEG       6A 
+UCB0BR1             ABS    CONST UNTYP.           ASEG       6B 
+UCB0CTL0            ABS    CONST UNTYP.           ASEG       68 
+UCB0CTL1            ABS    CONST UNTYP.           ASEG       69 
+UCB0I2CIE           ABS    CONST UNTYP.           ASEG       6C 
+UCB0I2COA           ABS    CONST UNTYP.           ASEG       118 
+UCB0I2CSA           ABS    CONST UNTYP.           ASEG       11A 
+UCB0RXBUF           ABS    CONST UNTYP.           ASEG       6E 
+UCB0STAT            ABS    CONST UNTYP.           ASEG       6D 
+UCB0TXBUF           ABS    CONST UNTYP.           ASEG       6F 
+UDOT                REL    CONST PUB UNTYP.       CODE       1082 
+UDOTR               REL    CONST PUB UNTYP.       CODE       1A2E 
+UDSLASHMOD          REL    CONST PUB UNTYP.       CODE       FA0 
+UDSTAR              REL    CONST PUB UNTYP.       CODE       FBE 
+UGREATER            REL    CONST PUB UNTYP.       CODE       70A 
+UINIT               REL    CONST PUB UNTYP.       CODE       ACE 
+ULESS               REL    CONST PUB UNTYP.       CODE       6FA 
+UMAX                REL    CONST PUB UNTYP.       CODE       DE0 
+UMAX1               REL    CONST UNTYP.           CODE       DEC 
+UMIN                REL    CONST PUB UNTYP.       CODE       DC8 
+UMIN1               REL    CONST UNTYP.           CODE       DD4 
+UMSLASHMOD          REL    CONST PUB UNTYP.       CODE       836 
+UMSTAR              REL    CONST PUB UNTYP.       CODE       806 
+UNLOOP              REL    CONST PUB UNTYP.       CODE       7F4 
+UNTIL               REL    CONST PUB UNTYP.       CODE       17E2 
+UNUSED              REL    CONST PUB UNTYP.       CODE       1D8A 
+UP                  ABS    CONST EXT [000] UNTYP. __EXTERNS  Solved Extern 
+UPC                 REL    CONST PUB UNTYP.       CODE       12F2 
+UPC1                REL    CONST UNTYP.           CODE       130C 
+USER                REL    CONST PUB UNTYP.       CODE       260 
+USEREMIT            REL    CONST PUB UNTYP.       CODE       A60 
+USERKEY             REL    CONST PUB UNTYP.       CODE       A50 
+VALIDQ              REL    CONST PUB UNTYP.       CODE       1E3E 
+VARAREA             ABS    CONST EXT [009] UNTYP. __EXTERNS  Solved Extern 
+VARBOT              REL    CONST PUB UNTYP.       CODE       1DA0 
+VARIABLE            REL    CONST PUB UNTYP.       CODE       222 
+VAR_SIZE            ABS    CONST EXT [010] UNTYP. __EXTERNS  Solved Extern 
+VECBOT              REL    CONST PUB UNTYP.       CODE       1DBC 
+WARM                REL    CONST PUB UNTYP.       CODE       1ECE 
+WDS1                REL    CONST UNTYP.           CODE       19DC 
+WDS2                REL    CONST UNTYP.           CODE       19F0 
+WDS3                REL    CONST UNTYP.           CODE       1A0A 
+WDTCTL              ABS    CONST UNTYP.           ASEG       120 
+WGAP                REL    CONST PUB UNTYP.       CODE       292E 
+WHILE               REL    CONST PUB UNTYP.       CODE       180E 
+WIPE                REL    CONST PUB UNTYP.       CODE       1F40 
+WITHIN              REL    CONST PUB UNTYP.       CODE       18DE 
+WORDD               REL    CONST PUB UNTYP.       CODE       1238 
+WORDS               REL    CONST PUB UNTYP.       CODE       19D6 
+XDOES               REL    CONST PUB UNTYP.       CODE       1662 
+XISQUOTE            REL    CONST PUB UNTYP.       CODE       EC6 
+XORIN               REL    CONST PUB UNTYP.       CODE       2874 
+XORR                REL    CONST PUB UNTYP.       CODE       5D8 
+XSQUOTE             REL    CONST PUB UNTYP.       CODE       EDE 
+ZERO                REL    CONST PUB UNTYP.       CODE       9A2 
+ZEROEQUAL           REL    CONST PUB UNTYP.       CODE       694 
+ZEROLESS            REL    CONST PUB UNTYP.       CODE       6A4 
+ZEROS               REL    CONST PUB UNTYP.       CODE       1A54 
+ZEROS1              REL    CONST UNTYP.           CODE       1A56 
+ZEROS2              REL    CONST UNTYP.           CODE       1A68 
+ZEROUDOTR           REL    CONST PUB UNTYP.       CODE       1A40 
+_1KHZ05             REL    CONST PUB UNTYP.       CODE       25A8 
+_1KHZ25             REL    CONST PUB UNTYP.       CODE       258C 
+_1KHZ50             REL    CONST PUB UNTYP.       CODE       2570 
+_1khz05             REL    CONST UNTYP.           CODE       2540 
+_1khz25             REL    CONST UNTYP.           CODE       2538 
+_1khz50             REL    CONST UNTYP.           CODE       2530 
+_50HZ50             REL    CONST PUB UNTYP.       CODE       25C2 
+_50hz50             REL    CONST UNTYP.           CODE       2548 
+__MSP430G2203__     ABS    CONST UNTYP.           ASEG       Not solved 
+abort1              REL    CONST UNTYP.           CODE       156A 
+adc0                REL    CONST UNTYP.           CODE       29AA 
+adcr0               REL    CONST UNTYP.           CODE       29CE 
+and0                REL    CONST UNTYP.           CODE       2810 
+ausatmen            REL    CONST PUB UNTYP.       CODE       2736 
+ausi                REL    CONST UNTYP.           CODE       2742 
+bit4h               REL    CONST PUB UNTYP.       CODE       2392 
+bit4l               REL    CONST PUB UNTYP.       CODE       23F2 
+bit4out             REL    CONST PUB UNTYP.       CODE       2332 
+bit5h               REL    CONST PUB UNTYP.       CODE       237A 
+bit5l               REL    CONST PUB UNTYP.       CODE       23DA 
+bit5out             REL    CONST PUB UNTYP.       CODE       2318 
+bit6h               REL    CONST PUB UNTYP.       CODE       2362 
+bit6l               REL    CONST PUB UNTYP.       CODE       23C2 
+bit6out             REL    CONST PUB UNTYP.       CODE       22FE 
+bit7h               REL    CONST PUB UNTYP.       CODE       234A 
+bit7l               REL    CONST PUB UNTYP.       CODE       23AA 
+bit7out             REL    CONST PUB UNTYP.       CODE       22E4 
+bl0                 REL    CONST EXT [025] UNTYP. CODE       Solved Extern 
+bl1                 REL    CONST EXT [026] UNTYP. CODE       Solved Extern 
+blcn                REL    CONST EXT [027] UNTYP. CODE       Solved Extern 
+boot1               REL    CONST UNTYP.           CODE       1EC4 
+bran                REL    CONST PUB UNTYP.       CODE       736 
+cclr                REL    CONST PUB UNTYP.       CODE       1D0E 
+ccrc1               REL    CONST UNTYP.           CODE       1B2C 
+ccrc2               REL    CONST UNTYP.           CODE       1B34 
+cgap0               REL    CONST UNTYP.           CODE       291E 
+cget                REL    CONST PUB UNTYP.       CODE       1D3E 
+cget1               REL    CONST UNTYP.           CODE       1D4A 
+cget2               REL    CONST UNTYP.           CODE       1D4C 
+cnt0                REL    CONST UNTYP.           CODE       241A 
+con0                REL    CONST UNTYP.           CODE       27B8 
+cor                 ABS    CONST EXT [011] UNTYP. __EXTERNS  Solved Extern 
+crcval              ABS    CONST EXT [018] UNTYP. __EXTERNS  Solved Extern 
+cset                REL    CONST PUB UNTYP.       CODE       1CE2 
+ctoggle             REL    CONST PUB UNTYP.       CODE       1D28 
+daa0                REL    CONST UNTYP.           CODE       28FC 
+dit                 REL    CONST EXT [030] UNTYP. CODE       Solved Extern 
+dit0                REL    CONST UNTYP.           CODE       28D2 
+doboot0             REL    CONST UNTYP.           CODE       1DF1 
+doboot1             REL    CONST UNTYP.           CODE       1DF8 
+dobran              REL    CONST UNTYP.           CODE       738 
+docreate            REL    CONST PUB UNTYP.       CODE       240 
+dodoes              REL    CONST PUB UNTYP.       CODE       27C 
+donext              REL    CONST UNTYP.           CODE       7A 
+donoop              REL    CONST UNTYP.           CODE       7A 
+dotcold0            REL    CONST UNTYP.           CODE       1EE1 
+dotcold1            REL    CONST UNTYP.           CODE       1EE6 
+einatmen            REL    CONST PUB UNTYP.       CODE       2710 
+eini                REL    CONST UNTYP.           CODE       271C 
+enres               REL    CONST PUB UNTYP.       CODE       22AC 
+etc0                REL    CONST EXT [028] UNTYP. CODE       Solved Extern 
+etc1                REL    CONST EXT [029] UNTYP. CODE       Solved Extern 
+exit1               REL    CONST UNTYP.           CODE       246C 
+fourshiftl          REL    CONST PUB UNTYP.       CODE       24C8 
+frq0                REL    CONST UNTYP.           CODE       263A 
+gap0                REL    CONST UNTYP.           CODE       28B2 
+ih1                 REL    CONST UNTYP.           CODE       1E0A 
+infoB               ABS    CONST EXT [012] UNTYP. __EXTERNS  Solved Extern 
+infoC               ABS    CONST EXT [014] UNTYP. __EXTERNS  Solved Extern 
+infoD               ABS    CONST EXT [015] UNTYP. __EXTERNS  Solved Extern 
+inout0              REL    CONST UNTYP.           CODE       2794 
+intseg              ABS    CONST EXT [016] UNTYP. __EXTERNS  Solved Extern 
+intvecs             ABS    CONST EXT [017] UNTYP. __EXTERNS  Solved Extern 
+inv0                REL    CONST UNTYP.           CODE       27E4 
+invalid             REL    CONST UNTYP.           CODE       1EA6 
+isr_TA0             REL    CONST PUB UNTYP.       CODE       20D0 
+isr_TA1             REL    CONST PUB UNTYP.       CODE       20A8 
+isr_ta0_1           REL    CONST UNTYP.           CODE       20DA 
+isr_ta1_1           REL    CONST UNTYP.           CODE       20CE 
+isr_ta1_2           REL    CONST UNTYP.           CODE       20C2 
+lastword            REL    CONST PUB UNTYP.       CODE       29C5 
+link                REL    VAR UNTYP.             CODE       29C5 
+links               REL    CONST UNTYP.           CODE       2558 
+lit                 REL    CONST PUB UNTYP.       CODE       1F0 
+lpm_wake            REL    CONST PUB UNTYP.       CODE       1F96 
+mittig              REL    CONST UNTYP.           CODE       2560 
+ms1                 REL    CONST UNTYP.           CODE       1CBC 
+nullirq             ABS    CONST EXT [-001] UNTYP. __EXTERNS  Solved Extern 
+offtime1            REL    CONST UNTYP.           CODE       251C 
+offtime2            REL    CONST UNTYP.           CODE       2526 
+onems1              REL    CONST UNTYP.           CODE       1C9E 
+onems2              REL    CONST UNTYP.           CODE       1CA6 
+ontime1             REL    CONST UNTYP.           CODE       24F0 
+ontime2             REL    CONST UNTYP.           CODE       24FA 
+or0                 REL    CONST UNTYP.           CODE       2844 
+outv                ABS    CONST EXT [019] UNTYP. __EXTERNS  Solved Extern 
+pcrc1               REL    CONST UNTYP.           CODE       1B54 
+pcrc2               REL    CONST UNTYP.           CODE       1B62 
+pcrc3               REL    CONST UNTYP.           CODE       1B64 
+pwm0                REL    CONST UNTYP.           CODE       26E4 
+qbran               REL    CONST PUB UNTYP.       CODE       74A 
+qqq0                REL    CONST UNTYP.           CODE       21D3 
+qqq1                REL    CONST UNTYP.           CODE       2208 
+rechts              REL    CONST UNTYP.           CODE       2550 
+reset1              REL    CONST UNTYP.           CODE       1EB4 
+servo0              REL    CONST UNTYP.           CODE       2674 
+setgpio             REL    CONST PUB UNTYP.       CODE       227A 
+setoutin            REL    CONST PUB UNTYP.       CODE       2294 
+sleep               REL    CONST PUB UNTYP.       CODE       1FBE 
+sleep0              REL    CONST UNTYP.           CODE       1FC3 
+sleep1              REL    CONST UNTYP.           CODE       1FCA 
+stamp               REL    CONST UNTYP.           CODE       2A 
+stamp0              REL    CONST UNTYP.           CODE       2B 
+stampend            REL    CONST UNTYP.           CODE       41 
+sweep0              REL    CONST UNTYP.           CODE       2770 
+swh0                ABS    CONST EXT [020] UNTYP. __EXTERNS  Solved Extern 
+swh1                ABS    CONST EXT [021] UNTYP. __EXTERNS  Solved Extern 
+swl0                ABS    CONST EXT [022] UNTYP. __EXTERNS  Solved Extern 
+swl1                ABS    CONST EXT [023] UNTYP. __EXTERNS  Solved Extern 
+swtable             ABS    CONST EXT [024] UNTYP. __EXTERNS  Solved Extern 
+uareasize           ABS    CONST UNTYP.           CODE       22 
+uinitend            REL    CONST UNTYP.           CODE       AF2 
+uinitstart          REL    CONST UNTYP.           CODE       AD0 
+valid               REL    CONST UNTYP.           CODE       1EA4 
+ver0                REL    CONST UNTYP.           CODE       3 
+verend              REL    CONST UNTYP.           CODE       2A 
+version             REL    CONST UNTYP.           CODE       2 
+warm0               REL    CONST UNTYP.           CODE       1ED3 
+warm1               REL    CONST UNTYP.           CODE       1ED8 
+wclr                REL    CONST PUB UNTYP.       CODE       1CF8 
+wgap0               REL    CONST UNTYP.           CODE       293A 
+wipe1               REL    CONST UNTYP.           CODE       1F4C 
+wipmsg0             REL    CONST UNTYP.           CODE       1F5D 
+wipmsg1             REL    CONST UNTYP.           CODE       1F64 
+wset                REL    CONST PUB UNTYP.       CODE       1CCC 
+xdo                 REL    CONST PUB UNTYP.       CODE       760 
+xloop               REL    CONST PUB UNTYP.       CODE       786 
+xor0                REL    CONST UNTYP.           CODE       2878 
+xplusloop           REL    CONST PUB UNTYP.       CODE       7A6 
+xpwm                REL    CONST PUB UNTYP.       CODE       26F8 
+xpwm0               REL    CONST UNTYP.           CODE       2702 
+
+
+##############################
+#          CRC:477D          #
+#        Errors:   0         #
+#        Warnings: 0         #
+#        Bytes: 10724        #
+##############################
+
+
+
+

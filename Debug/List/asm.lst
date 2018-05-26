@@ -1,0 +1,66 @@
+###############################################################################
+#                                                                             #
+#     IAR Assembler V6.30.1.934/W32  for MSP430 26/May/2018  17:37:22         #
+#     Copyright 1996-2015 IAR Systems AB.                                     #
+#                                                                             #
+#           Target option =  MSP430                                           #
+#           Source file   =  C:\Users\mka\Documents\GitHub\4e4th034-uMMT\asm.s43#
+#           List file     =  C:\Users\mka\Documents\GitHub\4e4th034-uMMT\Debug\List\asm.lst#
+#           Object file   =  C:\Users\mka\Documents\GitHub\4e4th034-uMMT\Debug\Obj\asm.r43#
+#           Command line  =  C:\Users\mka\Documents\GitHub\4e4th034-uMMT\asm.s43 #
+#                            -OC:\Users\mka\Documents\GitHub\4e4th034-uMMT\Debug\Obj\ #
+#                            -s+ -M<> -w+                                     #
+#                            -LC:\Users\mka\Documents\GitHub\4e4th034-uMMT\Debug\List\ #
+#                            -t8 -r -D__MSP430G2553__                         #
+#                            -IC:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\INC\ #
+#                                                                             #
+###############################################################################
+
+      1    00FFFE              #include "msp430.h"                     ;
+                                #define controlled include file
+      2    00FFFE              
+      3    00FFFE                      NAME    main                    ; module
+                                name
+      4    00FFFE              
+      5    000000                      PUBLIC  main                    ; make
+                                                                        the
+                                                                        main
+                                                                        label
+                                                                        vissibl
+                                                                       e
+      6    00FFFE                                                      ;
+                                outside this module
+      7    00FFFE                      ORG     0FFFEh
+      8    00FFFE ....                 DC16    init                    ; set
+                                                 reset vector to 'init'
+                                                 label
+      9    010000              
+     10    000000                      RSEG    CSTACK                  ;
+  pre-declaration of segment
+     11    000000                      RSEG    CODE                    ; place
+  program in 'CODE' segment
+     12    000000              
+     13    000000 3140....     init:   MOV     #SFE(CSTACK), SP        ; set up
+                                                            stack
+     14    000004              
+     15    000004 0343         main:   NOP                             ; main
+                                                                        program
+     16    000006 B240805A2001         MOV.W   #WDTPW+WDTHOLD,&WDTCTL  ; Stop
+                                                                        watchdo
+                                                                       g
+                                                                        timer
+     17    00000C FF3F                 JMP $                           ; jump
+                                            to current location '$'
+     18    00000E                                                      ;
+                                (endless loop)
+     19    00000E                      END
+##############################
+#          CRC:F04B          #
+#        Errors:   0         #
+#        Warnings: 0         #
+#         Bytes: 16          #
+##############################
+
+
+
+

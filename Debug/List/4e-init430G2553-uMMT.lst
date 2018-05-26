@@ -1,0 +1,595 @@
+###############################################################################
+#                                                                             #
+#     IAR Assembler V6.30.1.934/W32  for MSP430 26/May/2018  17:50:47         #
+#     Copyright 1996-2015 IAR Systems AB.                                     #
+#                                                                             #
+#           Target option =  MSP430                                           #
+#           Source file   =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\4e-init430G2553-uMMT.s43#
+#           List file     =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\List\4e-init430G2553-uMMT.lst#
+#           Object file   =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\Obj\4e-init430G2553-uMMT.r43#
+#           Command line  =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\4e-init430G2553-uMMT.s43 #
+#                            -OC:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\Obj\ #
+#                            -s+ -M<> -w+                                     #
+#                            -LC:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\List\ #
+#                            -t8 -x -r -D__MSP430G2553__                      #
+#                            -IC:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\INC\ #
+#                                                                             #
+###############################################################################
+
+      1    000000              ; ----------------------------------------------
+                               --------------------------------
+      2    000000              ; 4e4th is a Forth based on CamelForth
+                                
+      3    000000              ; for the Texas Instruments MSP430 
+      4    000000              ; 
+      5    000000              ; This program is free software; you can
+                                redistribute it and/or modify
+      6    000000              ; it under the terms of the GNU General Public
+                                License as published by
+      7    000000              ; the Free Software Foundation; either version 3
+                                of the License, or
+      8    000000              ; (at your option) any later version.
+      9    000000              ; 
+     10    000000              ; This program is distributed in the hope that
+                                it will be useful,
+     11    000000              ; but WITHOUT ANY WARRANTY; without even the
+                                implied warranty of
+     12    000000              ; MERCHANTABILITY or FITNESS FOR A PARTICULAR
+                                PURPOSE.  See the
+     13    000000              ; GNU General Public License for more details.
+     14    000000              ;
+     15    000000              ; You should have received a copy of the GNU
+                                General Public License
+     16    000000              ; along with this program.  If not, see
+                                <http://www.gnu.org/licenses/>.
+     17    000000              ; 
+     18    000000              ; See LICENSE TERMS in Brads file readme.txt as
+                                well.
+     19    000000              
+     20    000000              ; ----------------------------------------------
+                               --------------------------------
+     21    000000              ; 4e-init430G2553.s43 - reset interupt service
+                                routine - MSP430G2553
+     22    000000              ; ----------------------------------------------
+                               --------------------------------
+     23    000000              
+     24    000000              ; 4e4th RAM memory map:
+     25    000000              ;   UP          User Pointer, 2 bytes
+     26    000000              ;   UAREA       User area, 36 bytes 
+     27    000000              ;   UAREA+20h   HOLD area, 40 bytes, grows down
+                                from end
+     28    000000              ;   UAREA+48h   PAD buffer, 88 bytes, must
+                                follow HOLD area
+     29    000000              ;   UAREA+A0h   Parameter stack, 128 B, grows
+                                down from end
+     30    000000              ;   UAREA+120h  Return stack, 128 B, grows down
+                                from end
+     31    000000              ;   UAREA+1A0h  TIB Terminal Input Buffer, 88
+                                bytes
+     32    000000              
+     33    000000              ; Note all must be word-aligned.
+     34    000000              ; See also the definitions of U0, S0, and R0 in
+                                the "system variables &
+     35    000000              ; constants" area.  A task w/o terminal input
+                                requires 200h bytes.
+     36    000000              ; Double all except TIB and PAD for 32-bit
+                                CPUs.
+     37    000000              
+     38    000000              
+     39    000000              ; RAM map
+     40    000000              ; name     celles  comment
+     41    000000                                 ; -----
+     42    000000              ; UAREA_SIZE  = 16   ; UAREA 
+     43    000012              UAREA_SIZE  = 18   ; UAREA 
+     44    000000                                 ; -----
+     45    000000                                 ; | LSTACK: leave stack
+                                
+     46    000000                                 ; | grows up 
+     47    000000                                 ; | 
+     48    000000                                 ; V
+     49    000000                                 ;   
+     50    000000                                 ; ^
+     51    000000                                 ; |
+     52    000000                                 ; | grows down
+     53    000036              PSTACK_SIZE = 54   ; | PSTACK: top of parameter
+                                stack area. 
+     54    000000                                 ; -----
+     55    000000                                 ;   
+     56    000000                                 ; ^
+     57    000000                                 ; |
+     58    000000                                 ; | grows down
+     59    000036              RSTACK_SIZE = 54   ; | RSTACK: top of return
+                                stack area. 
+     60    000000              
+     61    000000              ;          aligned buffers only required for
+                                terminal tasks.
+     62    000000              ; names    bytes  
+     63    000000                                 ; ^
+     64    000000                                 ; |
+     65    000000                                 ; | grows down
+     66    000022              HOLD_SIZE   = 34   ; | HOLDAREA: 
+     67    000000                                 ; -----
+     68    000054              PAD_SIZE    = 84   ; scratch pad
+     69    000000                                 ; -----
+     70    000054              TIB_SIZE    = 84   ; terminal input buffer
+     71    000000                                 ; -----
+     72    000000                                 ; <-- HERE
+     73    000010              VAR_SIZE    = 16   ; variable area SAVEed in
+                                INFO-C
+     74    000000                                 ; -----
+     75    000000                                 
+     76    000000              
+     77    000000              ;        PUBLIC  UP,UAREA,PADAREA,LSTACK,PSTACK,
+                               RSTACK
+     78    000000                      PUBLIC  PADAREA,LSTACK,PSTACK,RSTACK
+     79    000000                      PUBLIC  TIBAREA,TIB_SIZE,UAREA_SIZE,VARA
+ REA,VAR_SIZE
+     80    000000                      PUBLIC  reset,main
+     81    000000                      PUBLIC  UAREA,UP,cor
+     82    000000                      PUBLIC  ROMDICT,RAMDICT
+     83    000000              
+     84    000000                      EXTERN  lastword,fenceadr,NOOP
+     85    000000              ;        EXTERN  runmagic,runsmal
+     86    000000                      EXTERN  lastword
+     87    000000                      EXTERN  COLDIP,BOOTIP
+     88    000000              ;        EXTERN  DEBUGIP
+     89    000000                      
+     90    000000                      RSEG    DATA16_Z  ; uninitialized RAM
+  segment
+     91    000000              
+     92    000000              ; RAM user area    -   system label, holds
+                                active user area 
+     93    000000              ; initialiesed by BOOT
+     94    000000              ; see hilvl UINIT
+     95    000000              
+     96    000000              UP:       DS16 1
+     97    000002              UAREA:    DS16 UAREA_SIZE
+     98    000026              
+     99    000026              ; cor    -     cause of reset variable, copy of
+                                IFG1
+    100    000026              cor:      DS16 1
+    101    000028              
+    102    000028              
+    103    000028              ; ----------------------------------------------
+                               --------------------------------
+    104    000028              ; uMMT Variables
+    105    000028              
+    106    000000                  PUBLIC outv
+    107    000000                  PUBLIC swh0,swh1,swl0,swl1,swtable,dit
+    108    000000                  PUBLIC etc0,etc1,bl0,bl1,blcn
+    109    000028                               ; default
+    110    000028              etc0:     DS16 1 ; 0
+    111    00002A              etc1:     DS16 1 ; 0
+    112    00002C              bl0:      DS16 1 ; 8000
+    113    00002E              bl1:      DS16 1 ; 20
+    114    000030              blcn:     DS16 1 ; --
+    115    000032              dit:      DS16 1 ; 100
+    116    000034              outv:     DS16 1 ; 0
+    117    000036              
+    118    000036              swtable:         ; 1KHZ
+    119    000036              swh0:     DS16 1 ;
+    120    000038              swh1:     DS16 1 ;
+    121    00003A              swl0:     DS16 1 ;
+    122    00003C              swl1:     DS16 1 ;
+    123    00003E              
+    124    00003E              ; ----------------------------------------------
+                               --------------------------------
+    125    00003E              
+    126    00003E              ; LSTACK   -   start leave stack
+    127    00003E              LSTACK:
+    128    00003E                        DS16  PSTACK_SIZE ; allocate parameter
+                                                            stack
+    129    0000AA              ; PSTACK   -   top of parameter stack         
+                                
+    130    0000AA              PSTACK:                     
+    131    0000AA                        DS16  RSTACK_SIZE ; allocate return
+                                                            stack
+    132    000116              ; RSTACK   -   top of return stack 
+    133    000116              RSTACK:                     
+    134    000116                        DS8   HOLD_SIZE   ; allocate hold
+                                                            area
+    135    000138              ; HOLDAREA   -   top of hold adrea
+    136    000138              HOLDAREA:
+    137    000138              
+    138    000138              ; PADAREA    -   start scratch pad; must follow
+                                HOLDAREA
+    139    000138              PADAREA:  DS8   PAD_SIZE
+    140    00018C              
+    141    00018C              ; TIBAREA    -   start Terminal Input Buffer
+    142    00018C              TIBAREA:  DS8   TIB_SIZE
+    143    0001E0              
+    144    0001E0              /*
+    145    0001E0              ; WASAREA    -    4 variables for Assembler
+                                WAS
+    146    0001E0              WASAREA:
+    147    0001E0              PUBLIC X1ADR,X2ADR,OPCADR,EXTADR
+    148    0001E0              X1ADR:  DS16 1
+    149    0001E0              X2ADR:  DS16 1
+    150    0001E0              OPCADR: DS16 1
+    151    0001E0              EXTADR: DS16 1
+    152    0001E0              */
+    153    0001E0              
+    154    0001E0              ; RAMDICT    -   end of system areas, start of
+                                free RAM
+    155    0001E0              RAMDICT:
+    156    0001E0              
+    157    0001E0              ; Variable Area is free RAM. 
+    158    0001E0              ; But it is saved to INFO-C when you SAVE an
+                                app.
+    159    0001E0              ; So your app will start with your variables
+                                set.
+    160    0001E0              ; VARAREA    -   start Variable Area
+    161    0001E0              VARAREA:  DS16   VAR_SIZE
+    162    000200              
+    163    000200              ; ----------------------------------------------
+                               --------------------------------
+    164    000200              ; POWER ON RESET AND INITIALIZATION
+    165    000200              
+    166    000200              #include "msp430G2553.h"            ; #define
+                                controlled include file
+    167    000200              #include "4e-CF430G2553forth.h"     ; header
+                                macros and register defs
+    168    000200              
+    169    000000                      RSEG CODE          ; place init in
+  'CODE' segment
+    170    000000              
+    171    000000              ; ----------------------------------------------
+                               --------------------------------
+    172    000000              ; MSP430G2553 Initialize system 
+    173    000000              ; (original: FR_EXP.lst and some of mecrisp
+                                (Koch)
+    174    000000              ; for LaunchPad 
+    175    000000              
+    176    000000              ; main   -   start_init, reset service
+                                routine
+    177    000000              main:             ; Debugger requires the 'main'
+                                symbol. 
+    178    000000              reset:            ; forth requires the reset
+                                symbol.
+    179    000000              start_init:       ; I require the start_init
+                                symbol. ;-)
+    180    000000              
+    181    000000 B240805A2001     MOV.W   #WDTPW+WDTHOLD,&WDTCTL  ; Stop
+                                                                    watchdog
+                                                                    timer
+    182    000006              
+    183    000006 D2420200....     MOV.B   &IFG1,&cor      ; save IFG1 to cor
+                                                            low byte
+    184    00000C C243....         MOV.B   #0,&(cor+1) ; clr hi byte
+    185    000010              
+    186    000010              
+    187    000010              /*
+    188    000010              ; 1MHz
+    189    000010                  mov.b   &CALBC1_1MHZ, &BCSCTL1   ; Set
+                                DCO
+    190    000010                  mov.b   &CALDCO_1MHZ, &DCOCTL    ; to 1
+                                MHz.
+    191    000010                
+    192    000010                  mov.b   #006h, &P1SEL            ; Use
+                                P1.1/P1.2 for USCI_A0
+    193    000010                  mov.b   #006h, &P1SEL2           ; Use
+                                P1.1/P1.2 for USCI_A0
+    194    000010              
+    195    000010              ; Configure UART 
+    196    000010                  bis.b   #UCSSEL_2,&UCA0CTL1     ;db2
+                                SMCLK
+    197    000010                  mov.b   #0x68,&UCA0BR0          ;db3 1MHz
+                                9600 Insgesamt &104 = $068
+    198    000010                  mov.b   #0x0,&UCA0BR1           ;db4 1MHz
+                                9600
+    199    000010                  mov.b   #UCBRS_1,&UCA0MCTL      ;db5
+                                Modulation UCBRSx = 1
+    200    000010                  bic.b   #UCSWRST,&UCA0CTL1      ;db6
+                                **Initialize USCI state machine**
+    201    000010              */
+    202    000010              
+    203    000010              
+    204    000010              ; /*
+    205    000010              ; 8MHz
+    206    000010 D242FD105700     mov.b   &CALBC1_8MHZ, &BCSCTL1   ; Set
+                                                                     DCO
+    207    000016 D242FC105600     mov.b   &CALDCO_8MHZ, &DCOCTL    ; to 8
+                                                                     MHz.
+    208    00001C                
+    209    00001C F24006002600     mov.b   #006h, &P1SEL            ; Use
+                                                                     P1.1/P1.2
+                                                                     for
+                                                                     USCI_A0
+    210    000022 F24006004100     mov.b   #006h, &P1SEL2           ; Use
+                                                                     P1.1/P1.2
+                                                                     for
+                                                                     USCI_A0
+    211    000028              
+    212    000028              ; Configure UART (Koch) 
+    213    000028 F2D080006100     bis.b   #UCSSEL_2,&UCA0CTL1     ;db2
+                                                                    SMCLK
+    214    00002E F24041006200     mov.b   #65,&UCA0BR0            ;db3 8MHz
+                                                                    9600
+                                                                    Insgesamt
+                                                                    &833 =
+                                                                    $341
+    215    000034 F24003006300     mov.b   #3,&UCA0BR1             ;db4 8MHz
+                                                                    9600
+    216    00003A E2426400         mov.b   #UCBRS_2,&UCA0MCTL      ;db5
+                                                                    Modulation
+                                                                    UCBRSx =
+                                                                    2
+    217    00003E D2C36100         bic.b   #UCSWRST,&UCA0CTL1      ;db6
+                                                                    **Initializ
+                                                                   e USCI state
+                                                                    machine**
+    218    000042              */
+    219    000042              
+    220    000042              /*
+    221    000042              ; Prozessortakt 16 MHz
+    222    000042                  mov.b   &CALBC1_16MHZ, &BCSCTL1   ; Set
+                                DCO
+    223    000042                  mov.b   &CALDCO_16MHZ, &DCOCTL    ;
+                                
+    224    000042              
+    225    000042                  mov.b   #006h, &P1SEL            ; Use
+                                P1.1/P1.2 for USCI_A0
+    226    000042                  mov.b   #006h, &P1SEL2           ; Use
+                                P1.1/P1.2 for USCI_A0
+    227    000042              
+    228    000042              ; Configure UART 
+    229    000042                  bis.b   #006h, &P1SEL           ; Use
+                                P1.1/P1.2 for USCI_A0
+    230    000042                  bis.b   #006h, &P1SEL2          ; Use
+                                P1.1/P1.2 for USCI_A0
+    231    000042                  bis.b   #UCSSEL_2,&UCA0CTL1     ;db2
+                                SMCLK
+    232    000042                  mov.b   #0x82,&UCA0BR0          ;db3 16MHz
+                                9600 Insgesamt &1666 = $682
+    233    000042                  mov.b   #0x06,&UCA0BR1          ;db4 16MHz
+                                9600
+    234    000042                  mov.b   #UCBRS_2,&UCA0MCTL      ;db5
+                                Modulation UCBRSx = 2
+    235    000042                  bic.b   #UCSWRST,&UCA0CTL1      ;db6
+                                **Initialize USCI state machine**
+    236    000042              */
+    237    000042              
+    238    000042              
+    239    000042              
+    240    000042              
+    241    000042              ;    clr.b   &IE1 ; Lösche die Interrupt-Flags
+                                von Oscillator Fault,
+    242    000042              ;                 ; NMI, Flash-Violation.
+    243    000042 E2C30000         bic.b   #OFIE,&IE1
+    244    000046 B24000A52801     mov.w   #FWKEY, &FCTL1           ; Schreib-
+                                                                     &
+                                                                     Loeschzugr
+                                                                    iffe
+                                                                     ausgeschal
+                                                                    tet.
+    245    00004C B24053A52A01     mov.w   #FWKEY|FSSEL_1|19, &FCTL2 ; MCLK/20
+                                                                      for Flash
+                                                                      Timing
+                                                                      Generator
+    246    000052              
+    247    000052 B24010A52C01     mov.w   #FWKEY+LOCK, &FCTL3      ; Lock
+                                                                     Flash
+                                                                     memory
+                                                                     against
+                                                                     writing
+    248    000058              
+    249    000058              ; Enable port1 on Launchpad 
+    250    000058              ; P1.0 = LED1 red
+    251    000058              ; P1.3 = button
+    252    000058              ; P1.4 = free out (may be speaker+ )
+    253    000058              ; P1.5 = free out (amy be speaker- )
+    254    000058              ; P1.6 = LED2 green
+    255    000058 F2D070002200     BIS.B   #(BIT6+BIT5+BIT4), &P1DIR
+    256    00005E F2D078002100     BIS.B   #(BIT6+BIT5+BIT4+BIT3), &P1OUT
+    257    000064 F2D088002700     BIS.B   #(BIT3+BIT7),&P1REN ; pullup for
+                                                                S2+S3
+    258    00006A              
+    259    00006A              ; setup forth registers
+    260    00006A 3140....         MOV     #RSTACK,SP              ; set up
+                                                                    return
+                                                                    stack
+    261    00006E 3440....         MOV     #PSTACK,PSP             ; set up
+                                                                    parameter
+                                                                    stack
+    262    000072 B240........     MOV     #UAREA,&UP              ; initial
+                                                                    user
+                                                                    pointer
+    263    000078 0743             MOV     #0,TOS                  ; clear top
+                                                                    of
+                                                                    pstack
+    264    00007A 3540....         MOV     #COLDIP,IP              ; set IP of
+                                                                    starting
+                                                                    word
+    265    00007E                  
+    266    00007E              ;    MOV     #COLDIP,IP              ; set IP of
+                                starting word
+    267    00007E 3540....         MOV     #BOOTIP,IP              ; set IP of
+                                                                    starting
+                                                                    word
+                                                                    
+    268    000082              ;    MOV     #DEBUGIP,IP              ; set IP
+                                of starting word 
+    269    000082              
+    270    000082                  NEXT ; enter virtual forth maschine
+                                now
+    270.1  000082 3645                 MOV @IP+,W     // ; fetch word address
+  into W
+    270.2  000084 3046                 MOV @W+,PC     // ; fetch code address
+  into PC, W=PFA
+    270.3  000086                      ENDM
+    271    000086              
+    272    000086              init_end:
+    273    000086              
+    274    000086              ; ----------------------------------------------
+                               --------------------------------
+    275    000086              ; DEFAULT INTERRUPT HANDLER nullirq
+    276    000000                       PUBLIC isr_null
+    277    000086              
+    278    000086 32C2         isr_null: DINT 
+    279    000088 0013                   RETI 
+    280    00008A              isr_null_end: 
+    281    00008A              
+    282    00008A              ROMDICT:
+    283    00008A                      END
+
+
+
+Segment             Type 	Mode
+----------------------------------------
+CODE                UNTYPED  	REL 
+DATA16_Z            UNTYPED  	REL 
+
+Label               Mode   Type                   Segment    Value/Offset
+------------------------------------------------------------------------------
+ADC10AE0            ABS    CONST UNTYP.           ASEG       4A 
+ADC10CTL0           ABS    CONST UNTYP.           ASEG       1B0 
+ADC10CTL1           ABS    CONST UNTYP.           ASEG       1B2 
+ADC10DTC0           ABS    CONST UNTYP.           ASEG       48 
+ADC10DTC1           ABS    CONST UNTYP.           ASEG       49 
+ADC10MEM            ABS    CONST UNTYP.           ASEG       1B4 
+ADC10SA             ABS    CONST UNTYP.           ASEG       1BC 
+BCSCTL1             ABS    CONST UNTYP.           ASEG       57 
+BCSCTL2             ABS    CONST UNTYP.           ASEG       58 
+BCSCTL3             ABS    CONST UNTYP.           ASEG       53 
+BOOTIP              ABS    CONST EXT [001] UNTYP. __EXTERNS  Solved Extern 
+CACTL1              ABS    CONST UNTYP.           ASEG       59 
+CACTL2              ABS    CONST UNTYP.           ASEG       5A 
+CALBC1_12MHZ        ABS    CONST UNTYP.           ASEG       10FB 
+CALBC1_16MHZ        ABS    CONST UNTYP.           ASEG       10F9 
+CALBC1_1MHZ         ABS    CONST UNTYP.           ASEG       10FF 
+CALBC1_8MHZ         ABS    CONST UNTYP.           ASEG       10FD 
+CALDCO_12MHZ        ABS    CONST UNTYP.           ASEG       10FA 
+CALDCO_16MHZ        ABS    CONST UNTYP.           ASEG       10F8 
+CALDCO_1MHZ         ABS    CONST UNTYP.           ASEG       10FE 
+CALDCO_8MHZ         ABS    CONST UNTYP.           ASEG       10FC 
+CAPD                ABS    CONST UNTYP.           ASEG       5B 
+COLDIP              ABS    CONST EXT [000] UNTYP. __EXTERNS  Solved Extern 
+DCOCTL              ABS    CONST UNTYP.           ASEG       56 
+FCTL1               ABS    CONST UNTYP.           ASEG       128 
+FCTL2               ABS    CONST UNTYP.           ASEG       12A 
+FCTL3               ABS    CONST UNTYP.           ASEG       12C 
+HOLDAREA            REL    CONST UNTYP.           DATA16_Z   138 
+HOLD_SIZE           ABS    CONST UNTYP.           ASEG       22 
+IE1                 ABS    CONST UNTYP.           ASEG       0 
+IE2                 ABS    CONST UNTYP.           ASEG       1 
+IFG1                ABS    CONST UNTYP.           ASEG       2 
+IFG2                ABS    CONST UNTYP.           ASEG       3 
+LSTACK              REL    CONST PUB UNTYP.       DATA16_Z   3E 
+NOOP                ABS    CONST EXT [-001] UNTYP. __EXTERNS  Solved Extern 
+P1DIR               ABS    CONST UNTYP.           ASEG       22 
+P1IE                ABS    CONST UNTYP.           ASEG       25 
+P1IES               ABS    CONST UNTYP.           ASEG       24 
+P1IFG               ABS    CONST UNTYP.           ASEG       23 
+P1IN                ABS    CONST UNTYP.           ASEG       20 
+P1OUT               ABS    CONST UNTYP.           ASEG       21 
+P1REN               ABS    CONST UNTYP.           ASEG       27 
+P1SEL               ABS    CONST UNTYP.           ASEG       26 
+P1SEL2              ABS    CONST UNTYP.           ASEG       41 
+P2DIR               ABS    CONST UNTYP.           ASEG       2A 
+P2IE                ABS    CONST UNTYP.           ASEG       2D 
+P2IES               ABS    CONST UNTYP.           ASEG       2C 
+P2IFG               ABS    CONST UNTYP.           ASEG       2B 
+P2IN                ABS    CONST UNTYP.           ASEG       28 
+P2OUT               ABS    CONST UNTYP.           ASEG       29 
+P2REN               ABS    CONST UNTYP.           ASEG       2F 
+P2SEL               ABS    CONST UNTYP.           ASEG       2E 
+P2SEL2              ABS    CONST UNTYP.           ASEG       42 
+P3DIR               ABS    CONST UNTYP.           ASEG       1A 
+P3IN                ABS    CONST UNTYP.           ASEG       18 
+P3OUT               ABS    CONST UNTYP.           ASEG       19 
+P3REN               ABS    CONST UNTYP.           ASEG       10 
+P3SEL               ABS    CONST UNTYP.           ASEG       1B 
+P3SEL2              ABS    CONST UNTYP.           ASEG       43 
+PADAREA             REL    CONST PUB UNTYP.       DATA16_Z   138 
+PAD_SIZE            ABS    CONST UNTYP.           ASEG       54 
+PSTACK              REL    CONST PUB UNTYP.       DATA16_Z   AA 
+PSTACK_SIZE         ABS    CONST UNTYP.           ASEG       36 
+RAMDICT             REL    CONST PUB UNTYP.       DATA16_Z   1E0 
+ROMDICT             REL    CONST PUB UNTYP.       CODE       8A 
+RSTACK              REL    CONST PUB UNTYP.       DATA16_Z   116 
+RSTACK_SIZE         ABS    CONST UNTYP.           ASEG       36 
+TA0CCR0             ABS    CONST UNTYP.           ASEG       172 
+TA0CCR1             ABS    CONST UNTYP.           ASEG       174 
+TA0CCR2             ABS    CONST UNTYP.           ASEG       176 
+TA0CCTL0            ABS    CONST UNTYP.           ASEG       162 
+TA0CCTL1            ABS    CONST UNTYP.           ASEG       164 
+TA0CCTL2            ABS    CONST UNTYP.           ASEG       166 
+TA0CTL              ABS    CONST UNTYP.           ASEG       160 
+TA0IV               ABS    CONST UNTYP.           ASEG       12E 
+TA0R                ABS    CONST UNTYP.           ASEG       170 
+TA1CCR0             ABS    CONST UNTYP.           ASEG       192 
+TA1CCR1             ABS    CONST UNTYP.           ASEG       194 
+TA1CCR2             ABS    CONST UNTYP.           ASEG       196 
+TA1CCTL0            ABS    CONST UNTYP.           ASEG       182 
+TA1CCTL1            ABS    CONST UNTYP.           ASEG       184 
+TA1CCTL2            ABS    CONST UNTYP.           ASEG       186 
+TA1CTL              ABS    CONST UNTYP.           ASEG       180 
+TA1IV               ABS    CONST UNTYP.           ASEG       11E 
+TA1R                ABS    CONST UNTYP.           ASEG       190 
+TIBAREA             REL    CONST PUB UNTYP.       DATA16_Z   18C 
+TIB_SIZE            ABS    CONST PUB UNTYP.       ASEG       54 
+TLV_ADC10_1_LEN     ABS    CONST UNTYP.           ASEG       10DB 
+TLV_ADC10_1_TAG     ABS    CONST UNTYP.           ASEG       10DA 
+TLV_CHECKSUM        ABS    CONST UNTYP.           ASEG       10C0 
+TLV_DCO_30_LEN      ABS    CONST UNTYP.           ASEG       10F7 
+TLV_DCO_30_TAG      ABS    CONST UNTYP.           ASEG       10F6 
+UAREA               REL    CONST PUB UNTYP.       DATA16_Z   2 
+UAREA_SIZE          ABS    CONST PUB UNTYP.       ASEG       12 
+UCA0ABCTL           ABS    CONST UNTYP.           ASEG       5D 
+UCA0BR0             ABS    CONST UNTYP.           ASEG       62 
+UCA0BR1             ABS    CONST UNTYP.           ASEG       63 
+UCA0CTL0            ABS    CONST UNTYP.           ASEG       60 
+UCA0CTL1            ABS    CONST UNTYP.           ASEG       61 
+UCA0IRRCTL          ABS    CONST UNTYP.           ASEG       5F 
+UCA0IRTCTL          ABS    CONST UNTYP.           ASEG       5E 
+UCA0MCTL            ABS    CONST UNTYP.           ASEG       64 
+UCA0RXBUF           ABS    CONST UNTYP.           ASEG       66 
+UCA0STAT            ABS    CONST UNTYP.           ASEG       65 
+UCA0TXBUF           ABS    CONST UNTYP.           ASEG       67 
+UCB0BR0             ABS    CONST UNTYP.           ASEG       6A 
+UCB0BR1             ABS    CONST UNTYP.           ASEG       6B 
+UCB0CTL0            ABS    CONST UNTYP.           ASEG       68 
+UCB0CTL1            ABS    CONST UNTYP.           ASEG       69 
+UCB0I2CIE           ABS    CONST UNTYP.           ASEG       6C 
+UCB0I2COA           ABS    CONST UNTYP.           ASEG       118 
+UCB0I2CSA           ABS    CONST UNTYP.           ASEG       11A 
+UCB0RXBUF           ABS    CONST UNTYP.           ASEG       6E 
+UCB0STAT            ABS    CONST UNTYP.           ASEG       6D 
+UCB0TXBUF           ABS    CONST UNTYP.           ASEG       6F 
+UP                  REL    CONST PUB UNTYP.       DATA16_Z   0 
+VARAREA             REL    CONST PUB UNTYP.       DATA16_Z   1E0 
+VAR_SIZE            ABS    CONST PUB UNTYP.       ASEG       10 
+WDTCTL              ABS    CONST UNTYP.           ASEG       120 
+bl0                 REL    CONST PUB UNTYP.       DATA16_Z   2C 
+bl1                 REL    CONST PUB UNTYP.       DATA16_Z   2E 
+blcn                REL    CONST PUB UNTYP.       DATA16_Z   30 
+cor                 REL    CONST PUB UNTYP.       DATA16_Z   26 
+dit                 REL    CONST PUB UNTYP.       DATA16_Z   32 
+etc0                REL    CONST PUB UNTYP.       DATA16_Z   28 
+etc1                REL    CONST PUB UNTYP.       DATA16_Z   2A 
+fenceadr            ABS    CONST EXT [-001] UNTYP. __EXTERNS  Solved Extern 
+init_end            REL    CONST UNTYP.           CODE       86 
+isr_null            REL    CONST PUB UNTYP.       CODE       86 
+isr_null_end        REL    CONST UNTYP.           CODE       8A 
+lastword            ABS    CONST EXT [-001] UNTYP. __EXTERNS  Solved Extern 
+main                REL    CONST PUB UNTYP.       CODE       0 
+outv                REL    CONST PUB UNTYP.       DATA16_Z   34 
+reset               REL    CONST PUB UNTYP.       CODE       0 
+start_init          REL    CONST UNTYP.           CODE       0 
+swh0                REL    CONST PUB UNTYP.       DATA16_Z   36 
+swh1                REL    CONST PUB UNTYP.       DATA16_Z   38 
+swl0                REL    CONST PUB UNTYP.       DATA16_Z   3A 
+swl1                REL    CONST PUB UNTYP.       DATA16_Z   3C 
+swtable             REL    CONST PUB UNTYP.       DATA16_Z   36 
+
+
+##############################
+#          CRC:32BB          #
+#        Errors:   0         #
+#        Warnings: 0         #
+#         Bytes: 138         #
+##############################
+
+
+
+

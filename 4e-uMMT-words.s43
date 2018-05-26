@@ -1,0 +1,774 @@
+; ------------------------------------------------------------------------------
+; 4e-uMMT Suporting Words - MSP430G2553
+; ------------------------------------------------------------------------------
+
+; uMMT system variables --------------------------------------------------------
+EXTERN outv
+EXTERN swh0,swh1,swl0,swl1,swtable
+
+;  Two 32bit timer often used in uMMT to generate square wave output.
+;Z   SWH1      -- adr       upper timer value, ON time
+    HEADER  SWH1,4,'SWH1',DOCON
+        DW swh1
+;Z   SWH0      -- adr       lower timer value, ON time
+    HEADER  SWH0,4,'SWH0',DOCON
+        DW swh0
+;Z   SWL1      -- adr       upper timer value, OFF time
+    HEADER  SWL1,4,'SWL1',DOCON
+        DW swl1
+;Z   SWL0      -- adr       lower timer value, OFF time
+    HEADER  SWL0,4,'SWL0',DOCON
+        DW swl0
+
+;U   OUTV      -- adr       output backup register, general purpose register too
+    HEADER  OUTADR,4,'OUTV',DOCON
+        DW outv
+;Z   DITV      -- adr      tone duration register  
+    HEADER  DITV,4,'DITV',DOCON
+        DW dit
+
+; 32bit timer A1 values. 
+;Z   BLI0      -- adr       blinker counter low
+    HEADER  BLI0,4,'BLI0',DOCON
+        DW bl0
+;Z   BLI1      -- adr      blinker counter high  
+    HEADER  BLI1,4,'BLI1',DOCON
+        DW bl1
+
+; Z   BLCN      -- adr      blinker counter high  
+    HEADERLESS  BLCN,4,'BLCN',DOCON
+        DW blcn
+
+; timer A0 driven 32bit counter
+;Z   ETC0      -- adr      timer counter low  
+    HEADER  ETC0,4,'ETC0',DOCON
+        DW etc0
+;Z   ETC1      -- adr      timer counter high  
+    HEADER  ETC1,4,'ETC1',DOCON
+        DW etc1
+
+/*
+; U BIT0      -- n        16 bit value with bitx set
+    HEADER  BITT0,4,'BIT0',DOCON
+        DW 00000001b
+; U BIT1      -- n        16 bit value with bitx set
+    HEADER  BITT1,4,'BIT1',DOCON
+        DW 00000010b
+; U BIT2      -- n        16 bit value with bitx set
+    HEADER  BITT2,4,'BIT2',DOCON
+        DW 00000100b
+; U BIT3      -- n        16 bit value with bitx set
+    HEADER  BITT3,4,'BIT3',DOCON
+        DW 00001000b
+; U BIT4      -- n        16 bit value with bitx set
+    HEADER  BITT4,4,'BIT4',DOCON
+        DW 00010000b
+; U BIT5      -- n        16 bit value with bitx set
+    HEADER  BITT5,4,'BIT5',DOCON
+        DW 00100000b
+; U BIT6      -- n        16 bit value with bitx set
+    HEADER  BITT6,4,'BIT6',DOCON
+        DW 01000000b
+; U BIT7      -- n        16 bit value with bitx set
+    HEADER  BITT7,4,'BIT7',DOCON
+        DW 10000000b
+*/
+
+; P1.0 LED Blinker per interrupt -----------------------------------------------
+
+EXTERN bl0,bl1,blcn
+
+; test: read register TA1R 0x190
+;U   LBL     --      LED blink
+    HEADER  BLPLUS,3,'LBL',DOCODE
+    ;TA1 init
+        BIS     #CCIE,&TA1CCTL0        ; Interrupt mode aktivieren     
+        MOV     &bl1,&blcn            ; set rate hi
+        MOV     &bl0,&TA1CCR0          ; set rate lo
+   ; start Timer
+        BIS     #(TASSEL_2+ID_3+MC_1+TACLR),&TA1CTL   ; smclk/8 upmode
+        EINT
+        NEXT
+
+;U   LON     --    Turn LED on, i.e. stop blink
+    HEADER  BLMINUS,3,'LON',DOCODE
+      MOV  #0,&TA1CTL  ; 
+      BIS.B #BIT6,&P1OUT 
+      ; DINT
+      NEXT
+
+;U   LOFF     --    Turn LED off.
+    HEADER  BLOFF,4,'LOFF',DOCODE
+      MOV  #0,&TA1CTL  ; 
+      BIC.B #BIT6,&P1OUT 
+      ; DINT
+      NEXT
+
+/*******************************************************************************
+; ISR for TA1CCR0 CCIFG  -  "binking" in 1/1 ration
+;    HEADER  ISRTA1,6,'ISRTA1',DOCODE
+ ir_TA1:  ; BIC    #BIT0,&TA1CTL  ; reset interrupt flag
+          DEC blcnt
+          JNZ ir_ta1_1 
+          MOV bl1,blcnt
+          XOR.B  #BIT0,&P1OUT  ; red toggle P1.0          
+ir_ta1_1: RETI
+          ; NEXT
+   PUBLIC ir_TA1
+*******************************************************************************/
+
+; ISR for TA1CCR1 CCIFG  -  "flashing" in 1/20 ration
+;    HEADER  ISRTA1,6,'ISRTA1',DOCODE
+isr_TA1:  ; BIC    #BIT0,&TA1CTL  ; reset interrupt flag
+          DEC blcn
+          JZ  isr_ta1_2     
+          CMP #1,blcn
+          JNZ isr_ta1_1
+          BIS.B #BIT6,&P1OUT   ; red on P1.0
+          JMP isr_ta1_1
+          MOV bl1,blcn
+isr_ta1_2: BIC.B  #BIT6,&P1OUT  ; red off P1.0          
+          MOV bl1,blcn
+isr_ta1_1: RETI
+          ; NEXT
+   PUBLIC isr_TA1
+
+
+; Timer TA0 --------------------------------------------------------------------
+
+EXTERN etc0,etc1
+
+; test: read register TA0R 0x0170
+; ISR for TA0CCR1 CCIFG  -  stoppuhr
+;    HEADER  ISRTA0,6,'ISRTA0',DOCODE
+isr_TA0:  ; BIC    #BIT0,&TA0CTL  ; reset interrupt flag
+          INC etc0
+          JNZ  isr_ta0_1     
+          INC etc1 
+isr_ta0_1: RETI
+          ; NEXT
+   PUBLIC isr_TA0
+
+;U   ETC      --               electronic time clock (stoppuhr)
+    HEADER  ETC,3,'ETC',DOCODE
+    ;TA0 init
+        MOV     #TACLR,&TA0CTL   ; stopp & reset timer
+        MOV     #0,&etc0 
+        MOV     #0,&etc1 
+        BIS     #CCIE,&TA0CCTL0     ; Interrupt mode aktivieren     
+   ; start Timer
+        MOV     #1000,&TA0CCR0       ; set ms  (8MHZ) 
+        BIS     #(TASSEL_2+ID_3+MC_1),&TA0CTL   ; smclk/8 upmode
+        EINT
+        NEXT
+
+;U   ETCOFF     --          Turn timer A0 off.
+    HEADER  ETCOFF,6,'ETCOFF',DOCODE
+      MOV  #0,&TA0CTL 
+      NEXT
+
+;U   ETC@       -- etc1 etc0 ta0r       fetch timer values
+;  etc1 @ etc0 @ 170 @  ;
+    HEADER  ETCFETCH,4,'ETC@',DOCOLON
+      DW ETC1,FETCH
+      DW ETC0,FETCH 
+      DW lit,TA0R,FETCH
+      DW EXIT
+
+; switches ---------------------------------------------------------------------
+
+; portpin P1.3 --->0_0----GND
+;U   S2        -- mask port        S2 button mask and port address
+    HEADER S2,2,'S2',DOTWOCON
+      DW P1IN
+      DW 00001000b
+;U   S2?     -- f                  test button S2, true is pressed 
+    HEADER S2Q,3,'S2?',DOCOLON
+      DW S2, cget, ZEROEQUAL, EXIT
+
+; portpin P1.7 --->0_0----GND
+;U   S3        -- mask port        S3 button mask and port address
+    HEADER S3,2,'S3',DOTWOCON
+      DW P1IN
+      DW 10000000b
+;U   S3?     -- f                  test button S3, true is pressed 
+    HEADER S3Q,3,'S3?',DOCOLON
+      DW S3, cget, ZEROEQUAL, EXIT
+
+
+
+; mini debugger ----------------------------------------------------------------
+
+;Z   1#  n --     type 1 digit
+     HEADER NUM1,2,'1#',DOCOLON
+       DW LESSNUM,ZERO,NUM,NUMGREATER,TYP
+       DW SPACE,EXIT
+;Z   2#  n --     type 2 digits
+     HEADER NUM2,2,'2#',DOCOLON
+       DW LESSNUM,ZERO,NUM,NUM,NUMGREATER,TYP
+        DW SPACE,EXIT
+;Z   4#  n --     type 4 digits
+     HEADER NUM4,2,'4#',DOCOLON
+       DW LESSNUM,ZERO,NUM,NUM,NUM,NUM,NUMGREATER,TYP
+       DW SPACE,EXIT
+
+;U   ???  --      show uMMT user variables 
+     HEADER QQQ,3,'???',DOCOLON
+       DW CR
+       DW BASE,FETCH,HEX
+       DW XISQUOTE
+       DB (qqq1-qqq0) ; count byte of string
+qqq0: DB 'OUTV SWH1 SWH0 SWL1 SWL0 BLI1 BLI0 BLCN SF DR O I DSP' ; string
+      EVEN 
+qqq1: DW ITYPE,CR 
+       DW OUTADR,FETCH,NUM4
+       DW SWH1,FETCH,NUM4
+       DW SWH0,FETCH,NUM4
+       DW SWL1,FETCH,NUM4
+       DW SWL0,FETCH,NUM4
+       DW BLI1,FETCH,NUM4
+       DW BLI0,FETCH,NUM4
+       DW BLCN,FETCH,NUM4
+       DW lit,P2SEL,CFETCH,NUM2
+       DW lit,P2DIR,CFETCH,NUM2
+       DW lit,P2OUT,CFETCH,lit,4,RSHIFT,NUM1
+       DW lit,P2IN,CFETCH,NUM1
+       DW TOR,DOTS ; print stack 
+       DW RFROM,BASE,STORE,EXIT
+       
+; PORT P2 functions ------------------------------------------------------------
+
+; TI document SLAU144I - December 2004 - Revised January 2012 
+; The digital I/O registers are listed in Table 8-2. 
+
+/*
+Device Pinout: MSP430G2553 20-Pin PDIP – and see the 
+connections as implemented on the 24 Pin Mini PCB
+(MIcrobox)
+
+                       (TOP VIEW) 
+  \ VCC-(+3.3V)---------[01   20]----------------(GND)-VSS
+  \ ------------- P1.0--[02   19]--P2.6 OUT2 –470R–LED-GND
+  \ -RXD-Serial->-P1.1--[03   18]--P2.7 OUT3 -470R–LED-GND
+  \ -TXD-Serial-<-P1.2--[04   17]--Test –( programming )  
+  \ S2----------- P1.3--[05   16]--RESET -------------- S1
+  \ ------------- P1.4--[06   15]--P1.7 --------------- S3
+  \ ------------- P1.5--[07   14]--P1.6 ----- blinking LED
+  \ >(R to +) IN0 P2.0--[08   13]--P2.5 OUT1 -470R–LED-GND
+  \ >(R to +) IN1 P2.1--[09   12]--P2.4 OUT0 -470R–LED-GND
+  \ >(R to +) IN2 P2.2--[10   11]--P2.3 IN3 — (R to +)---<
+  \ NOTE: In this program uMMT the 4 Inputs are internally
+  \ programmed, so an internal resistor is connected to Vcc,
+  \ as result, open inputs show the state of HIGH.
+*/
+
+; some port primitives (dont like this way - mk)
+; P2in  = $28
+; P2out = $29
+; P2dir = $2A
+; P2sel = $2E
+; P2ren = $2F
+
+;U   SETGPIO     --     select GPIO function of P2
+    HEADER setgpio,7,'SETGPIO',DOCOLON
+      DW lit,0x00,lit,P2SEL,CSTORE,EXIT
+
+;U   SETOUTIN    --     set direction register P2
+    HEADER setoutin,8,'SETOUTIN',DOCOLON
+      DW lit,0xF0,lit,P2DIR,CSTORE,EXIT
+
+;U   ENRES       --     set resistor enable register P2
+    HEADER enres,5,'ENRES',DOCOLON
+      DW lit,0x0F,lit,P2REN,CSTORE,EXIT  ; set resistors
+
+;U   INITP2    --       set all P2 defaults for uMMT  
+    HEADER INITP2,6,'INITP2',DOCOLON
+      DW setgpio  ; select GPIO
+      DW setoutin ; set directions
+      DW enres  ; set resistors
+      DW lit,0x0F,lit,P2OUT,CSTORE  ; set IN high impedanc
+      DW EXIT
+
+;U   BIT7OUT     --      set P2.7 to output direction
+    HEADER bit7out,7,'BIT7OUT',DOCOLON
+      DW lit,0x80,lit,P2DIR,cset,EXIT
+
+;U   BIT6OUT     --      set P2.6 to output direction
+    HEADER bit6out,7,'BIT6OUT',DOCOLON
+      DW lit,0x40,lit,P2DIR,cset,EXIT
+      
+;U   BIT5OUT     --      set P2.5 to output direction
+    HEADER bit5out,7,'BIT5OUT',DOCOLON
+      DW lit,0x20,lit,P2DIR,cset,EXIT
+
+;U   BIT4OUT     --      set P2.4 to output direction
+    HEADER bit4out,7,'BIT4OUT',DOCOLON
+      DW lit,0x10,lit,P2DIR,cset,EXIT
+
+;U   BIT7H       --      set P2.7 (high)
+    HEADER bit7h,5,'BIT7H',DOCOLON
+      DW lit,0x80,lit,P2OUT,cset,EXIT
+
+;U   BIT6H       --      set P2.6 (high)
+    HEADER bit6h,5,'BIT6H',DOCOLON
+      DW lit,0x40,lit,P2OUT,cset,EXIT
+
+;U   BIT5H       --      set P2.5 (high)
+    HEADER bit5h,5,'BIT5H',DOCOLON
+      DW lit,0x20,lit,P2OUT,cset,EXIT
+
+;U   BIT4H       --      set P2.4 (high)
+    HEADER bit4h,5,'BIT4H',DOCOLON
+      DW lit,0x10,lit,P2OUT,cset,EXIT
+
+;U   BIT7L       --      reset P2.7 (low)
+    HEADER bit7l,5,'BIT7L',DOCOLON
+      DW lit,0x80,lit,P2OUT,cclr,EXIT
+
+;U   BIT6L       --      reset P2.6 (low)
+    HEADER bit6l,5,'BIT6L',DOCOLON
+      DW lit,0x40,lit,P2OUT,cclr,EXIT
+
+;U   BIT5L       --      reset P2.5 (low)
+    HEADER bit5l,5,'BIT5L',DOCOLON
+      DW lit,0x20,lit,P2OUT,cclr,EXIT
+
+;U   BIT4L       --      reset P2.4 (low)
+    HEADER bit4l,5,'BIT4L',DOCOLON
+      DW lit,0x10,lit,P2OUT,cclr,EXIT
+
+;U   SCOUNTER  n --      binary counter OUT, n sets tempo 
+; 7FFF AND 1+
+; begin outl  1 outv +!  dup ms key? until drop key drop ;
+    HEADER SCOUNTER,8,'SCOUNTER',DOCOLON
+       DW lit,0x7FFF,ANDD,ONEPLUS,INITP2,OUTL
+cnt0:  DW lit,1,OUTADR,PLUSSTORE,OUTL
+       DW DUP,MS 
+       DW KEYQ, qbran
+       DEST cnt0
+       DW DROP,KEY,DROP,EXIT
+
+;U   COUNTER     --      8Hz binary counter OUT 
+; 124 scounter ;
+    HEADER COUNTER,7,'COUNTER',DOCOLON
+       DW INITP2,lit,124,SCOUNTER,EXIT
+
+/*
+bin
+: bit6><7  ( nib -- nib' )
+  dup 1100 and 0= if exit then
+  dup 1100 xor 0= if exit then
+  1100 xor ;
+*/
+     HEADERLESS BITSWAP67,4,'BS67',DOCODE
+       AND   #1111b,TOS
+       PUSH TOS
+       AND.B #1100b,TOS
+       JZ exit1
+       XOR.B #1100b,TOS
+       JZ exit1
+       POP TOS
+       XOR.B #1100b,TOS
+       NEXT
+exit1: POP TOS
+       NEXT
+
+       
+;U   OUT!     n --     write n to upper nibble of P2 (4 LEDs) 
+; 4 lshift 0F or   p2 c! ;      \ write port 
+     HEADER OUTSTORE,4,'OUT!',DOCOLON
+       DW BITSWAP67
+       DW lit,4,LSHIFT,lit,0x0f,ORR  ; lower nibble: all bits set. 
+       DW lit,P2OUT,CSTORE,EXIT
+
+;U   IN@      -- n      read lower nibble digital input of P2  
+; P2 1- c@ 000F and ; 
+     HEADER INFETCH,3,'IN@',DOCOLON
+       DW lit,P2IN,CFETCH
+       DW lit,0x000F,ANDD,EXIT
+       
+;U   OUTL      --       write OUTV to upper nibble of P2 (4 LEDs) 
+; outv @ out! ; 
+     HEADER OUTL,4,'OUTL',DOCOLON
+       DW OUTADR,FETCH,OUTSTORE,EXIT
+
+;U   4shiftl     --     shift value in OUTV to the left one nibble (up)     
+; outv @ 04 lshift  0F or outv !  ;      \ write port 
+     HEADER fourshiftl,7,'4SHIFTL',DOCOLON
+       DW OUTADR,FETCH
+       DW lit,4,LSHIFT
+       ; DW lit,0x0F,ORR
+       DW OUTADR,STORE
+       DW EXIT
+
+; timer loops ------------------------------------------------------------------
+
+;Z   ONTIME      --       execute ON timer once 
+;  swh1 @ 0 DO  swh0 @ 0 DO LOOP LOOP ;  
+     HEADER ONTIME,6,'ONTIME',DOCOLON
+          DW SWH1,FETCH,ONEPLUS,ZERO,xdo 
+ontime1:  DW SWH0,FETCH,ONEPLUS,ZERO,xdo
+ontime2:  DW xloop
+          DEST ontime2
+          DW xloop
+          DEST ontime1
+          DW EXIT
+;Z   OFFTIME     --      execute OFF timer once 
+;  offtime @ 0 DO onlcnt 0 DO LOOP LOOP ;  
+     HEADER OFFTIME,7,'OFFTIME',DOCOLON
+           DW SWL1,FETCH,ONEPLUS,ZERO,xdo 
+offtime1:  DW SWL0,FETCH,ONEPLUS,ZERO,xdo
+offtime2:  DW xloop
+           DEST offtime2
+           DW xloop
+           DEST offtime1
+           DW EXIT
+
+; preset tabels
+_1khz50:  DW 05,20 ; ontime   
+          DW 05,20 ; offtime 
+_1khz25:  DW 05,10 
+          DW 05,30 
+_1khz05:  DW 05,02
+          DW 05,38 
+_50hz50:  DW 05,40 
+          DW 05,40 
+rechts:   DW 10,25  ; ontime ~ 1 ms   
+          DW 110,10 ; limits: max min 
+links:    DW 10,110  ; ontime ~ 2 ms
+          DW 110,10 ; limits: max min 
+mittig:   DW 10,60  ; ontime ~ 1.5 ms
+          DW 110,10 ; limits: max min 
+
+; some square wave timer presets -----------------------------------------------
+;U   1KHZ        --     1 kHz frequency, 50% duty cycle 
+     HEADER _1KHZ50,4,'1KHZ',DOCOLON
+        DW lit,_1khz50,lit,swtable,lit,8,MOVE ; move 8 bytes to variables
+        DW EXIT
+;U   1KHZ25     --     1 kHz frequency, 25% duty cycle 
+     HEADER _1KHZ25,6,'1KHZ25',DOCOLON
+        DW lit,_1khz25,lit,swtable,lit,8,MOVE ; move 8 bytes to variables
+        DW EXIT
+;U   1KHZ5     --     1 kHz frequency, 5% duty cycle 
+     HEADER _1KHZ05,5,'1KHZ5',DOCOLON
+        DW lit,_1khz05,lit,swtable,lit,8,MOVE ; move 8 bytes to variables
+        DW EXIT
+;U   50HZ        --     50 Hz frequency, 50% duty cycle 
+     HEADER _50HZ50,4,'50HZ',DOCOLON
+        DW lit,_50hz50,lit,swtable,lit,8,MOVE ; move 8 bytes to variables
+        DW EXIT
+;U   LEFTMOST        --     servo puls, turning servo to the left 
+     HEADER LEFTMOST,8,'LEFTMOST',DOCOLON
+        DW lit,links,lit,swtable,lit,8,MOVE ; move 4 bytes to variables
+        DW EXIT
+;U   MIDDLE        --       servo puls, turning servo to a middle position 
+     HEADER MIDDLE,6,'MIDDLE',DOCOLON
+        DW lit,mittig,lit,swtable,lit,8,MOVE ; move 4 bytes to variables
+        DW EXIT
+;U   RIGHTMOST        --     servo puls, turning servo to the right 
+     HEADER RIGHTMOST,9,'RIGHTMOST',DOCOLON
+        DW lit,rechts,lit,swtable,lit,8,MOVE ; move 4 bytes to variables
+        DW EXIT
+
+
+
+; Examples =====================================================================
+;          HEADER EXDUMMY,5,'<--EX',DOCOLON  ; dummy
+;              DW EXIT
+
+; P2.7 --> Frequency -----------------------------------------------------------
+;U   FRQ  --     Output frequency at P2.7 using SW timer values.  
+     HEADER FRQ,3,'FRQ',DOCOLON
+        DW INITP2
+frq0:   DW bit7h,ONTIME
+        DW bit7l,OFFTIME
+        DW KEYQ, qbran
+        DEST frq0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE,EXIT
+        
+
+; P2.6 --> Servo ---------------------------------------------------------------
+; Use extern DC power supply for servos.
+; Connect servo-GND to MCU-GND.
+; Connect servo control lines to OUTx. 
+; Control line needs one 1..2ms puls, 20ms pause, ~$40x, 
+; for one position
+
+;U   POSITION   --    drive servo line at P2.6 to position using SW1H value
+     HEADER POSITION,8,'POSITION',DOCOLON
+        DW INITP2
+        DW SWH1,FETCH,SLIM,SWH1,STORE ; set to limits
+        DW lit,0x40,ZERO,xdo 
+servo0: DW bit6h,ONTIME  
+        DW bit6l,lit,20,MS 
+        DW xloop    
+        DEST servo0 
+        DW ZERO,OUTSTORE,EXIT
+
+;Z   SLIM    n -- lim      limit n using values of SWL0 and SWL1 
+;    SWL0 @ max SWL1 @ min ;
+     HEADER SLIM,4,'SLIM',DOCOLON
+        DW SWL0,FETCH,MIN
+        DW SWL1,FETCH,MAX
+        DW EXIT
+;U   SERVO   n --    make a new servo position by adding n to SWH1 
+     HEADER SERVO,5,'SERVO',DOCOLON
+        DW SWH1,PLUSSTORE,EXIT
+;U   SR   --         turn servo to the right some degree 
+     HEADER SRIGHT,2,'SR',DOCOLON
+        DW lit,-5,SERVO,POSITION,EXIT
+;U   SL   --         turn servo to the left some degree 
+     HEADER SLEFT,2,'SL',DOCOLON
+        DW lit,5,SERVO,POSITION,EXIT
+
+; P2.5 --> PWM -----------------------------------------------------------------
+;U   PWM  --     Output frequency at P2.5 using SW timer values.  
+     HEADER PWM,3,'PWM',DOCOLON
+        DW INITP2
+pwm0:   DW bit5h,ONTIME
+        DW bit5l,OFFTIME
+        DW KEYQ, qbran
+        DEST pwm0
+        DW ZERO,OUTSTORE,EXIT
+
+/*
+decimal
+: xpwm     ( -- )  25 0 do bit5h ontime bit5l offtime loop ;
+: einatmen ( -- )  40 1 do  I swh1 !  40 I - swl1 !  xpwm  loop ;
+: ausatmen ( -- )  1 40 do  I swh1 !  40 I - swl1 !  xpwm  -1 +loop ;
+: sweep   begin  einatmen ausatmen  key? until ;
+*/
+     HEADERLESS xpwm,4,'XPWM',DOCOLON
+          DW lit,25,ZERO,xdo
+xpwm0:    DW bit5h,ONTIME,bit5l,OFFTIME
+          DW xloop
+          DEST xpwm0
+          DW EXIT
+
+     HEADERLESS einatmen,8,'EINATMEN',DOCOLON
+          DW lit,40,lit,1,xdo
+eini:     DW II,SWH1,STORE,lit,40,II,MINUS,SWL1,STORE
+          DW xpwm
+          DW xloop
+          DEST eini
+          DW EXIT
+
+     HEADERLESS ausatmen,8,'AUSATMEN',DOCOLON
+          DW lit,1,lit,40,xdo
+ausi:     DW II,SWH1,STORE,lit,40,II,MINUS,SWL1,STORE
+          DW xpwm
+          DW lit,-1,xplusloop
+          DEST ausi
+          DW EXIT
+
+;U   SWEEP    --        sweep PWM duty cycles up an dowm  
+     HEADER SWEEP,5,'SWEEP',DOCOLON
+        DW INITP2,_1KHZ50
+sweep0: DW einatmen,ausatmen
+        DW KEYQ, qbran
+        DEST sweep0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE,EXIT
+
+
+; P2 logic demos ---------------------------------------------------------------
+
+;U   INTOOUT   --        endless loop reading IN and puting it OUT to the LEDs
+; begin in@ out! key? until ;
+     HEADER INTOOUT,7,'INTOOUT',DOCOLON
+        DW INITP2
+inout0: DW INFETCH,OUTSTORE
+        DW KEYQ, qbran
+        DEST inout0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE
+        DW EXIT
+
+;U   COND-IN0  --     Condition of IN0 stored to OUT0, endless loop 
+     HEADER CONDIN0,8,'COND-IN0',DOCOLON
+        DW INITP2
+con0:   DW INFETCH
+        DW lit,1,ANDD
+        DW OUTSTORE
+        DW KEYQ, qbran
+        DEST con0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE,EXIT
+        
+;U   INVERT-IN0  --     Invert IN0 and store to OUT0, endless loop 
+     HEADER INVERTIN0,10,'INVERT-IN0',DOCOLON
+        DW INITP2
+inv0:   DW INFETCH
+        DW INVERT,lit,1,ANDD
+        DW OUTSTORE
+        DW KEYQ, qbran
+        DEST inv0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE,EXIT
+
+;U   AND-IN01   --     logic AND of IN0 and IN1 stored to OUT0, endless loop 
+     HEADER ANDIN,8,'AND-IN01',DOCOLON
+        DW INITP2
+and0:   DW INFETCH
+        DW DUP,lit,1,RSHIFT,ANDD,lit,0x01,ANDD
+        DW OUTSTORE
+        DW KEYQ, qbran
+        DEST and0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE,EXIT
+
+;U   OR-IN01   --      logic OR of IN0 and IN1 stored to OUT0, endless loop 
+     HEADER ORIN,7,'OR-IN01',DOCOLON
+        DW INITP2
+or0:   DW INFETCH
+        DW DUP,lit,1,RSHIFT,ORR,lit,0x01,ANDD
+        DW OUTSTORE
+        DW KEYQ, qbran
+        DEST or0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE,EXIT
+
+;U   XOR-IN01   --      logic XOR of IN0 and IN1 stored to OUT0, endless loop 
+     HEADER XORIN,8,'XOR-IN01',DOCOLON
+        DW INITP2
+xor0:   DW INFETCH
+        DW DUP,lit,1,RSHIFT,XORR,lit,0x01,ANDD
+        DW OUTSTORE
+        DW KEYQ, qbran
+        DEST xor0
+        DW KEY,DROP
+        DW ZERO,OUTSTORE,EXIT
+        
+
+; u4th morsecode example, sound and light --------------------------------------
+   EXTERN dit
+
+;U   GAP   --     play a short gap
+;  initp2  
+;  (did) @ 0 do ontime offtime loop ;
+     HEADER GAP,3,'GAP',DOCOLON
+       DW INITP2
+       DW lit,dit,FETCH,ZERO,xdo
+gap0:  DW ONTIME,OFFTIME,xloop
+       DEST gap0
+       DW EXIT
+
+;U   DIT   --    play a short tone
+;  initp2  
+;  (did) @ 0 do bit7h ontime bit7l offtime loop ;
+     HEADER DIT,3,'DIT',DOCOLON
+       DW INITP2
+       DW lit,dit,FETCH,ZERO,xdo
+dit0:  DW bit7h,ONTIME,bit7l,OFFTIME,xloop
+       DEST dit0
+       DW EXIT
+
+;U   DAH   --    play a long tone
+;  initp2
+;  (did) @ 3 * 0 do bit7h ontime bit7l offtime loop ;  
+     HEADER DAH,3,'DAH',DOCOLON
+       DW INITP2
+       DW lit,dit,FETCH,lit,3,STAR,ZERO,xdo
+daa0:  DW bit7h,ONTIME,bit7l,OFFTIME,xloop
+       DEST daa0
+       DW EXIT
+
+;U   CGAP    --    play a character gap   
+;  3 0 do gap loop ;
+     HEADER CGAP,4,'CGAP',DOCOLON
+       DW INITP2
+       DW lit,3,ZERO,xdo
+cgap0: DW GAP,xloop
+       DEST cgap0
+       DW EXIT
+
+;U   WGAP    --    play a word gap
+;  7 0 do gap loop ; 
+     HEADER WGAP,4,'WGAP',DOCOLON
+       DW INITP2
+       DW lit,7,ZERO,xdo
+wgap0: DW GAP,xloop
+       DEST wgap0
+       DW EXIT
+
+;U   SOS   --      play morse code S O S once 
+;  did gap did gap did cgap
+;  dah gap dah gap dah cgap
+;  did gap did gap did wgap ;
+     HEADER SOS,3,'SOS',DOCOLON
+       DW DIT,GAP,DIT,GAP,DIT,CGAP 
+       DW DAH,GAP,DAH,GAP,DAH,CGAP 
+       DW DIT,GAP,DIT,GAP,DIT,WGAP 
+       DW EXIT
+
+; now enter:  SOS SOS SOS
+
+
+
+; ADC P1.4 ---------------------------------------------------------------------
+
+/*
+  0000000000000010  CONSTANT ENC      \ Enable Conversion.
+  0000000000000001  CONSTANT ADC10SC  \ sample-and-conversion start.
+  0000000000000100  CONSTANT ADC10IFG
+  0100000000000000  CONSTANT INCH4    \ input chanel 4 <------------
+
+\ FEDCBA9876543210
+\   1               SREF_1      1*0x2000 VREF+ and VR- 
+\    1              ADC10SHT_2  2*0x800  16 x ADC10CLKs
+\          1        REF2_5V     0x040    ADC10 Ref 0:1.5V / 1:2.5V 
+\           1       REFON       0x020    Reference on
+\            1      ADC10ON     0x010    ADC10 On/Enable 
+  0011000001110000  CONSTANT ADCSETUP   */
+
+#define ADCSETUP (0011000001110000b)
+
+/*
+hex
+020 constant P1IN
+021 constant P1OUT  \ alias P1
+022 constant P1DIR
+027 constant P1REN
+
+1B0 CONSTANT ADC10CTL0
+1B2 CONSTANT ADC10CTL1
+1B4 CONSTANT ADC10MEM
+04A CONSTANT ADC10AE0
+*/
+
+
+;U   ADC       -- adc     sample & convert once, fetch adc  (pin 6, CA4, P1.4)
+     HEADER ADCC,3,'ADC',DOCODE
+       ; init ADC10  
+       BIC.B #BIT4,P1DIR ; input
+       BIC.B #BIT4,P1REN ; disable resistor
+       BIC.B #BIT4,P1OUT ; high resistive state
+       ; setup adc10
+       MOV #ADCSETUP,ADC10CTL0  ; siehe oben
+       MOV #INCH_4,ADC10CTL1 ; input channel 4
+       MOV.B #BIT4,ADC10AE0 ; analog input enable P1.4 = CA4
+       BIS #1,ADC10CTL0 ; start ADC10
+       ; one conversion
+       BIS #(ENC+ADC10SC),ADC10CTL0
+adc0:  BIT #ADC10IFG, ADC10CTL0 
+       JZ adc0
+       SUB   #2,PSP      ; push old TOS..
+       MOV   TOS,0(PSP)  ; ..onto stack
+       MOV   ADC10MEM,TOS
+       BIC #1,ADC10CTL0 ; stop ADC10
+       NEXT   
+
+;U   ADCR      --           ADC to OUT (LEDs), endless loop 
+; initp2  begin adc 64 / out! key? until ;
+     HEADER ADCR,4,'ADCR',DOCOLON
+        DW INITP2
+adcr0:  DW ADCC,lit,64,SLASH
+        DW OUTSTORE
+        DW KEYQ, qbran
+        DEST adcr0
+        DW KEY,DROP
+        DW EXIT
+        
+
+; finis

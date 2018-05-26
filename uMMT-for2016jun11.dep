@@ -1,0 +1,251 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+
+<project>
+  <fileVersion>2</fileVersion>
+  <fileChecksum>716934978</fileChecksum>
+  <configuration>
+    <name>Debug</name>
+    <outputs>
+      <file>$PROJ_DIR$\4e-infoC.s43</file>
+      <file>$PROJ_DIR$\4e-infoB.s43</file>
+      <file>$PROJ_DIR$\4e-infoD.s43</file>
+      <file>$PROJ_DIR$\4e-init430G2553-uMMT.s43</file>
+      <file>$PROJ_DIR$\4e-uMMT.s43</file>
+      <file>$PROJ_DIR$\4e-vecs430G2553-uMMT.s43</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-infoC.r43</file>
+      <file>$PROJ_DIR$\Debug\Exe\uMMT.hex</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-init430G2553-uMMT.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\asm.r43</file>
+      <file>$TOOLKIT_DIR$\inc\msp430.h</file>
+      <file>$PROJ_DIR$\4e-init430G2553.s43</file>
+      <file>$PROJ_DIR$\Debug\List\uMMT.map</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-init430G2553.r43</file>
+      <file>$PROJ_DIR$\4e-lpm-uMMT.s43</file>
+      <file>$PROJ_DIR$\Debug\List\4e-infoD.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-uMMT.r43</file>
+      <file>$PROJ_DIR$\Debug\List\4e-uMMT.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-infoD.r43</file>
+      <file>$PROJ_DIR$\4e-lnk430G2553-uMMT.xcl</file>
+      <file>$PROJ_DIR$\asm.s43</file>
+      <file>$PROJ_DIR$\Debug\List\4e-infoC.lst</file>
+      <file>$PROJ_DIR$\4e-boot-uMMT.s43</file>
+      <file>$PROJ_DIR$\4e-vecs430G2553-uMMT.s43.c</file>
+      <file>$PROJ_DIR$\Debug\Exe\uMMT-for2016jun11.d43</file>
+      <file>$PROJ_DIR$\4e-startup-uMMT.s43</file>
+      <file>$PROJ_DIR$\Debug\List\4e-init430G2553-uMMT.lst</file>
+      <file>$PROJ_DIR$\4e-uMMT-words.s43</file>
+      <file>$PROJ_DIR$\Debug\List\4e-vecs430G2553.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-vecs430G2553.r43</file>
+      <file>$PROJ_DIR$\4e-vecs430G2553.s43</file>
+      <file>$PROJ_DIR$\Debug\List\4e-vecs430G2553-uMMT.lst</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-infoB.r43</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-startup-uMMT.r43</file>
+      <file>$PROJ_DIR$\4e-CF430G2553forth.h</file>
+      <file>$PROJ_DIR$\Debug\List\4e-infoB.lst</file>
+      <file>$PROJ_DIR$\Debug\Exe\uMMT-for2016jun11.a43</file>
+      <file>$TOOLKIT_DIR$\inc\msp430g2553.h</file>
+      <file>$PROJ_DIR$\4e-core430.s43</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-vecs430G2553-uMMT.r43</file>
+      <file>$PROJ_DIR$\4e-deps430G2553.s43</file>
+      <file>$PROJ_DIR$\Debug\Obj\4e-vecs430G2553-uMMT.s43.pbi</file>
+      <file>$PROJ_DIR$\4e-hilvl430.s43</file>
+      <file>$PROJ_DIR$\Debug\Exe\uMMT-for2016jun11.ulp</file>
+      <file>$PROJ_DIR$\Debug\List\4e-init430G2553.lst</file>
+    </outputs>
+    <file>
+      <name>[ROOT_NODE]</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 7 12</file>
+        </tool>
+        <tool>
+          <name>ULP430</name>
+          <file> 43</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-infoC.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 6 21</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A430</name>
+          <file> 10 37 34</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-infoB.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 32 35</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A430</name>
+          <file> 10 37 34</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-infoD.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 18 15</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A430</name>
+          <file> 10 37 34</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-init430G2553-uMMT.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 8 26</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A430</name>
+          <file> 37 34</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-uMMT.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 16 17</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A430</name>
+          <file> 10 37 34 40 38 42 22 14 27</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-vecs430G2553-uMMT.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 39 31</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Exe\uMMT.hex</name>
+      <outputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 12</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 19 32 6 18 8 16 39</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-init430G2553.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 13 44</file>
+        </tool>
+      </outputs>
+      <inputs>
+        <tool>
+          <name>A430</name>
+          <file> 37 34</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\asm.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 9</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-vecs430G2553-uMMT.s43.c</name>
+      <outputs>
+        <tool>
+          <name>BICOMP</name>
+          <file> 41</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Exe\uMMT-for2016jun11.d43</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 19 32 6 18 13 16 29</file>
+        </tool>
+      </inputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-startup-uMMT.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 33</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\4e-vecs430G2553.s43</name>
+      <outputs>
+        <tool>
+          <name>A430</name>
+          <file> 29 28</file>
+        </tool>
+      </outputs>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\Debug\Exe\uMMT-for2016jun11.a43</name>
+      <inputs>
+        <tool>
+          <name>XLINK</name>
+          <file> 19 32 6 18 8 16 39</file>
+        </tool>
+      </inputs>
+    </file>
+    <forcedrebuild>
+      <name>$PROJ_DIR$\asm.s43</name>
+      <tool>A430</tool>
+    </forcedrebuild>
+  </configuration>
+  <configuration>
+    <name>Release</name>
+    <outputs/>
+    <forcedrebuild>
+      <name>[MULTI_TOOL]</name>
+      <tool>XLINK</tool>
+    </forcedrebuild>
+  </configuration>
+</project>
+
+

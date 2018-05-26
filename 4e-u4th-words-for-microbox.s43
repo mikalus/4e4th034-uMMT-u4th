@@ -1,0 +1,78 @@
+; ----------------------------------------------------------------------
+; 4e-uMMT Suporting Words - MSP430G2553 
+; ----------------------------------------------------------------------
+
+
+; PORTS =============================
+
+; TI document SLAU144I - December 2004 - Revised January 2012 
+; The digital I/O registers are listed in Table 8-2. 
+
+/*
+Device Pinout: MSP430G2553 20-Pin PDIP – and see the 
+connections as implemented on the 24 Pin Mini PCB
+
+                       (TOP VIEW) 
+  \ VCC-(+3.3V)---------[01   20]----------------(GND)-VSS
+  \ ----(LED1)--- P1.0--[02   19]--P2.6 OUT2 –470R–LED-GND
+  \ -RXD-Serial->-P1.1--[03   18]--P2.7 OUT3 -470R–LED-GND
+  \ -TXD-Serial-<-P1.2--[04   17]--Test –( programming )  
+  \ --------------P1.3--[05   16]--RESET  Switch S1 ------
+  \ ------------- P1.4--[06   15]-------------------------
+  \ --Sound-Out-- P1.5--[07   14]--P1.6 ------------------
+  \ >(R to +) IN0 P2.0--[08   13]--P2.5 OUT1 -470R–LED-GND
+  \ >(R to +) IN1 P2.1--[09   12]--P2.4 OUT0 -470R–LED-GND
+  \ >(R to +) IN2 P2.2--[10   11]--P2.3 IN3 — (R to +)---<
+  \ NOTE: In this program uMMT the 4 Inputs are internally
+  \ programmed, so an internal resistor is connected to Vcc,
+  \ as result, open inputs show the state of HIGH.
+*/
+
+; P2in  = $28
+; P2out = $29
+; P2dir = $2A
+; P2sel = $2E
+; P2ren = $2F
+
+;U INIT    --   Set P2 I/O 
+    HEADER INIT,4,'INIT',DOCOLON
+	  DW lit,0x00,lit,P2SEL,CSTORE  ; select GPIO
+          DW lit,0xF0,lit,P2DIR,CSTORE  ; set directions
+          DW lit,0x0F,lit,P2REN,CSTORE  ; set resistors
+          DW lit,0x0F,lit,P2OUT,CSTORE  ; set IN high impedanc
+          DW EXIT
+
+; 4 LEDs   portpinX->---resistor---LED---GND   =============================
+; P2.4 - LED0 
+; P2.5 - LED1 
+; P2.6 - LED2 
+; P2.7 - LED3 
+
+;U LED0      -- mask port         LEDx mask and OUT address
+    HEADER led0,4,'LED0',DOTWOCON
+	  DW P2OUT
+	  DW 00010000b
+;U LED1      -- mask port         LEDx mask and OUT address
+    HEADER led1,4,'LED1',DOTWOCON
+	  DW P2OUT
+	  DW 00100000b
+;U LED2      -- mask port         LEDx mask and OUT address
+    HEADER led2,4,'LED2',DOTWOCON
+	  DW P2OUT
+	  DW 01000000b
+;U LED3      -- mask port         LEDx mask and OUT address
+    HEADER led3,4,'LED3',DOTWOCON
+	  DW P2OUT
+	  DW 10000000b
+
+
+; VARIABLES =============================
+EXTERN outv
+
+;Z OUTV      -- adr       holds value for ON time
+    HEADER  OUTV,4,'OUTV',DOCON
+        DW outv
+
+
+
+; finis

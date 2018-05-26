@@ -1,0 +1,261 @@
+###############################################################################
+#                                                                             #
+#     IAR Assembler V6.30.1.934/W32  for MSP430 26/May/2018  17:49:55         #
+#     Copyright 1996-2015 IAR Systems AB.                                     #
+#                                                                             #
+#           Target option =  MSP430                                           #
+#           Source file   =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\4e-u4th.s43#
+#           List file     =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\List\4e-u4th.lst#
+#           Object file   =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\Obj\4e-u4th.r43#
+#           Command line  =  C:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\4e-u4th.s43 #
+#                            -OC:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\Obj\ #
+#                            -s+ -M<> -w+                                     #
+#                            -LC:\Users\mka\Documents\GitHub\4e4th034+uMMT+u4th\Debug\List\ #
+#                            -t8 -r -D__MSP430G2553__                         #
+#                            -IC:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\430\INC\ #
+#                                                                             #
+###############################################################################
+
+      1    000000              ; Build 4e4th+uMMT on MSP430G2553 MicroBox 
+                                
+      2    000000              ; for Juergen Pintaske, 2016 jun 11. 
+      3    000000              
+      4    000000              ; ----------------------------------------------
+                               --------------------------------
+      5    000000              ; 4e4th is a Forth based on CamelForth
+                                
+      6    000000              ; for the Texas Instruments MSP430 
+      7    000000              ; 
+      8    000000              ; This program is free software; you can
+                                redistribute it and/or modify
+      9    000000              ; it under the terms of the GNU General Public
+                                License as published by
+     10    000000              ; the Free Software Foundation; either version 3
+                                of the License, or
+     11    000000              ; (at your option) any later version.
+     12    000000              ; 
+     13    000000              ; This program is distributed in the hope that
+                                it will be useful,
+     14    000000              ; but WITHOUT ANY WARRANTY; without even the
+                                implied warranty of
+     15    000000              ; MERCHANTABILITY or FITNESS FOR A PARTICULAR
+                                PURPOSE.  See the
+     16    000000              ; GNU General Public License for more details.
+     17    000000              ;
+     18    000000              ; You should have received a copy of the GNU
+                                General Public License
+     19    000000              ; along with this program.  If not, see
+                                <http://www.gnu.org/licenses/>.
+     20    000000              ; 
+     21    000000              ; See LICENSE TERMS in Brads file readme.txt as
+                                well.
+     22    000000              ; ----------------------------------------------
+                               --------------------------------
+     23    000000              ; REVISION HISTORY
+     24    000000              ; 28 Mai 2016
+     25    000000              ;    Dokumentation überarbeitet für makeglossary
+                               .py ; mk
+     26    000000              ; 17 November 2013
+     27    000000              ;    Comments about making ISR in 4e4th
+     28    000000              ; 05 June 2013  
+     29    000000              ;    WORDS can stop and go now.
+     30    000000              ;    LABEL to build ISR code.
+     31    000000              ;    INTERRUPT to store ISR address in Interrupt
+                                vector. 
+     32    000000              ;    VECSAVE VECRESTORE VECBACK added.
+     33    000000              ; 11 Jan 2013 made comments, new features and
+                                words:
+     34    000000              ;    Indicate BASE in ok promt.
+     35    000000              ;    0U.R ( u n -- ) print u with n leading
+                                zeros.
+     36    000000              ;    (VECWIPE) ( -- ) erase ISR flash.
+     37    000000              ;    VECWIPE   ( -- ) do (VECWIPE) and set
+                                default reset vector.
+     38    000000              ; cleaned up/added memory information words:
+     39    000000              ;    RESETADR  ( -- adr)      reset vector
+                                address
+     40    000000              ;    MEMBOT    ( -- adr)      bottom of
+                                USERflash         
+     41    000000              ;    MEMTOP    ( -- adr)      top of USERflash  
+                                      
+     42    000000              ;    MEM       ( -- u)        unused bytes in
+                                flash
+     43    000000              ;    UNUSED    ( -- u)        unused bytes in
+                                RAM
+     44    000000              ;    VARBOT    ( -- adr)      bottom of variable
+                                area
+     45    000000              ;    TOPSEG    ( -- adr)      bottom of top most
+                                flash segment
+     46    000000              ;    VECBOT    ( -- adr)      bottom of
+                                interrupt vectors
+     47    000000              ;    ?         ( adr -- u )   display content of
+                                variable          
+     48    000000              ; 08 Dez 2012 merged brads PARSE etc form
+                                camelforth/340 V4.1
+     49    000000              ;    which fixes the empty string bug.
+     50    000000              ; Dez 2012   Added some features:
+     51    000000              ;   Save variables to info-c and restore from
+                                there on COLD.
+     52    000000              ;   Made upper most flash segment writable; you
+                                may write vectors now.
+     53    000000              ;    VEC! (x adr  -- )     store x to adr in top
+                                most segment
+     54    000000              ;    VEC! will write _any_ flash location.  !!
+                                dangerous!!
+     55    000000              ;   VECWIPE will erase flash but not kernel,
+                                sets reset vector to boot 4e4th.
+     56    000000              ;   Kernal is bigger now, user flash smaler;
+                                
+     57    000000              ;     see: XLINK configuration file for
+                                MSP430G2553 4e-lnk430G2553.xcl
+     58    000000              ; 30 Mar 2012 mk fixed FM/MOD
+     59    000000              ; 26 Feb 2012 mk - adopted to MSP430G2553
+     60    000000              ;   MEM ( -- n ) n = bytes left in flash
+     61    000000              ;   FLASHEND constant MEMTOP
+     62    000000              ;   FLASHSTART constant MEMBOT
+     63    000000              ;   kernel at $E000, IDP = FLASHSTART =
+                                C000
+     64    000000              ;   fixed backspace.
+     65    000000              ;   ok promt at end of line.
+     66    000000              ;   .S prints depth.
+     67    000000              ; ----------------------------------------------
+                               --------------------------------
+     68    000000              
+     69    000000              
+     70    000000              #include "msp430.h"                     ;
+                                #define controlled include file
+     71    000000              #include "4e-CF430G2553forth.h"         ; header
+                                macros and register defs
+     72    000000              
+     73    000000                      EXTERN  UP,UAREA,PADAREA,LSTACK,PSTACK,R
+ STACK
+     74    000000                      EXTERN  TIBAREA,RAMDICT,ROMDICT
+     75    000000                      EXTERN  TIB_SIZE,UAREA_SIZE,VARAREA,VAR_
+                               SIZE,nullirq
+     76    000000              
+     77    000000                      RSEG    CODE                    ; place
+  program in 'CODE' segment
+     78    000000              
+     79    000000              link    SET 0           ; initial dictionary
+                                link
+     80    000000              
+     81    000000              ; ----------------------------------------------
+                               --------------------------------
+     82    000000              ; chip ident
+     83    000000              
+     84    000000              
+     85    000000              ; production fuse 
+     86    000000 FFFF         PROFUSE:  DW 0xFFFF  ; burn fuse to prohibit
+                                                     WIPE 
+     87    000002              
+     88    000002              /***********************************************
+                               ********************************
+     89    000002              
+     90    000002              ; 4e4th
+     91    000002              ; version strings 
+     92    000002              version:  DB (verend-ver0)
+     93    000002              ver0:     DB ' MSP430G2553 LaunchPad - 4E4th '
+                                
+     94    000002                        EVEN 0x20 ; use blank as padding
+                                byte
+     95    000002              verend:
+     96    000002              
+     97    000002              stamp:    DB (stampend-stamp0)
+     98    000002              stamp0:   DB __date__,' ',__time__
+     99    000002              stampend:
+    100    000002              
+    101    000002              ************************************************
+                               *******************************/
+    102    000002              
+    103    000002              ; u4th
+    104    000002              ; version strings 
+    105    000002 27           version:  DB (verend-ver0)
+    106    000003 204D6963726F*ver0:     DB ' MicroBox u4th on MSP430G2553,
+                                               build: ' 
+    107    000029 20                     EVEN 0x20 ; use blank as padding
+                                                    byte
+    108    00002A              verend:
+    109    00002A              
+    110    00002A 16           stamp:    DB (stampend-stamp0)
+    111    00002B 4D6179203236*stamp0:   DB __date__,' ',__time__
+    112    000041              stampend: 
+    113    000041              
+    114    000041              
+    115    000041              ; ----------------------------------------------
+                               --------------------------------
+    116    000041              ; We #include the following source files, rather
+                                than compiling them 
+    117    000041              ; separately, so that they can inherit the value
+                                of 'link'.
+    118    000041              
+    119    000041              ; This is minimum for 4e4th ...
+    120    000041              #include "4e-deps430G2553.s43" ; MCU dependent
+                                code.
+    121    0001D4              #include "4e-core430.s43"      ; Assembled
+                                words, former called 'primitives'.
+    122    0009A6              #include "4e-hilvl430.s43"     ; forth kernel
+                                coded 'high level'.
+    123    001DEC              #include "4e-boot-uMMT.s43"         ; 4e4th boot
+                                procedure.´
+    124    001F96              ; ... here we have a running forth kernel.
+    125    001F96              
+    126    001F96              ; Include some features...
+    127    001F96              #include "4e-LPM-uMMT.s43"          ; handling
+                                sleepmodes
+    128    001FD4              #include "4e-uMMT-words.s43"
+    129    0029E4              #include "4e-u4th-words-for-microbox.s43"
+    130    002A5C              
+    131    002A5C              
+    132    002A5C              
+    133    002A5C              /***********************************************
+                               ********************************
+    134    002A5C              ; DEBUG FORTH EXECUTION 
+    135    002A5C              ; debug serieal
+    136    002A5C                PUBLIC DEBUGIP
+    137    002A5C              DEBUGIP: 
+    138    002A5C              ;  DW  DOTID
+    139    002A5C              DEBUG1: 
+    140    002A5C              ;   DW TASK
+    141    002A5C                 DW  KEY  ; 1@A0 test 1=rot,@=grün,A=beide,0=a
+                               us
+    142    002A5C                 DW  DUP  ;,DOTS,CR
+    143    002A5C                 DW  STORELEDS
+    144    002A5C              ;   DW  COLD
+    145    002A5C                 DW  EMIT 
+    146    002A5C                 DW  lit,0,qbran
+    147    002A5C                 DW  DEBUG1-$
+    148    002A5C                 DW  bran,-2
+    149    002A5C              
+    150    002A5C              /***********************************************
+                               ********************************
+    151    002A5C              ; debugging only
+    152    002A5C                HEADLESS CREATE,DOCOLON
+    153    002A5C                HEADLESS ALLOT,DOCOLON
+    154    002A5C                HEADLESS BUILDS,DOCOLON
+    155    002A5C                HEADLESS ICOMMA,DOCOLON
+    156    002A5C                HEADLESS XDOES,DOCOLON
+    157    002A5C                HEADLESS IHERE,DOCOLON
+    158    002A5C                HEADLESS IALLOT,DOCOLON
+    159    002A5C                HEADLESS CELL,DOCOLON
+    160    002A5C                HEADLESS PJOUT,DOCOLON
+    161    002A5C              ************************************************
+                               *******************************/
+    162    002A5C              
+    163    002A5C              
+    164    000000              PUBLIC lastword
+    165    002A5C              lastword equ link
+    166    002A5C              
+    167    002A5C              ; for debug map only:
+    168    002A5C              CamelForthEnd:
+    169    002A5C              
+    170    002A5C                      END
+##############################
+#          CRC:A85D          #
+#        Errors:   0         #
+#        Warnings: 0         #
+#        Bytes: 10844        #
+##############################
+
+
+
+

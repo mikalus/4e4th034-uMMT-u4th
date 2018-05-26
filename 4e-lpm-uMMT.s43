@@ -1,0 +1,34 @@
+; low power modes =============================================================
+
+; #define USCIAB0RX_VECTOR    (7 * 2u)  0xFFEE USCI A0/B0 Receive 
+
+PUBLIC lpm_wake
+
+lpm_wake:
+        ; BIS.B #BIT0,&021h      ; test: red LED on
+        BIC #(GIE+LPM4),0(RSP) ; clear SR on return stack - turn CPU on.        
+        RETI
+
+; Z LPM4      --           Enter low power mode 4, wake on RX interrupt.
+     HEADERLESS SLEEPMODE4,4,'LPM4',DOCODE
+         ; BIC.B #11000000b,IFG1  ; clear interrupt flags first 
+         BIS.B #UCA0RXIE,IE2    ; enable RX interrupt 
+         ; BIC.B #BIT0,&021h    ; test: red LED off 
+         PUSH SR                ; save status 
+         BIS #(GIE+LPM4),SR     ; CPU stops here 
+         POP SR                 ; restore status 
+         BIC.B #UCA0RXIE,IE2    ; disable RX interrupt 
+         ; DINT
+         ; BIS.B #BIT0,&021h    ; test: red LED on
+         NEXT
+
+;U   SLEEP   --       enter low power mode, get out: reset /key, LEDs off first
+     HEADER sleep,5,'SLEEP',DOCOLON
+        DW XISQUOTE
+        DB (sleep1-sleep0)
+sleep0: DB 'Sss...'
+        EVEN
+sleep1: DW ITYPE
+        DW SLEEPMODE4 
+        DW KEY,DROP,EXIT
+; finis
